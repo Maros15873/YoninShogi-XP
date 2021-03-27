@@ -1,12 +1,30 @@
 {
-  "name": "yonin-shogi",
+  "name": "server",
   "version": "1.0.0",
-  "description": "",
   "main": "server.js",
   "scripts": {
     "start": "node server/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha server/**/*.test.js"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "expect": "^26.6.2",
+    "express": "^4.17.1",
+    "moment": "^2.29.1",
+    "nodemon": "^2.0.7",
+    "socket.io": "^1.7.4"
+  },
+  "devDependencies": {
+    "mocha": "^8.3.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Maros15873/YoninShogi-XP.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Maros15873/YoninShogi-XP/issues"
+  },
+  "homepage": "https://github.com/Maros15873/YoninShogi-XP#readme",
+  "description": ""
 }
