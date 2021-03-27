@@ -1,10 +1,18 @@
+class User{
+    constructor (id, name, room) {
+        this.id = id;
+        this.name = name;
+        this.room = room;
+    }
+}
+
 class Users {
     constructor () {
         this.users = [];
     }
 
     addUser (id, name, room) {
-        var user = {id, name, room};
+        var user = new User(id, name, room);
         this.users.push(user);
         return user;
     }
@@ -25,10 +33,10 @@ class Users {
 
     getUserList (room){
         var users = this.users.filter((user) =>  user.room === room);
-        var namesArray = users.map((user) => user.name);
+        //var namesArray = users.map((user) => user.name);
 
-        return namesArray;
+        return users;
     }
 }
 
-module.exports = {Users};
+module.exports = {Users, User};

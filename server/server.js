@@ -5,7 +5,7 @@ const socketIO = require('socket.io');
 
 const {generateMessage} = require('./utils/message');
 const {isRealString} = require('./utils/validation');
-const {Users} = require('./utils/users'); 
+const {Users,User} = require('./utils/users'); 
 
 const publicPath = path.join(__dirname, '../public');
 const port = process.env.PORT || 3000
@@ -51,7 +51,6 @@ io.on('connection',(socket) => {
 
         if (user) {
             io.to(user.room).emit('updateUserList', users.getUserList(user.room));
-            io.to(user.room).emit('newMessage', generateMessage('Admin', `${user.name} has left.`));
 
             console.log(`${user.name} disconnected from server. [Room ${user.room}]`);
         }

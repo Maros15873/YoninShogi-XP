@@ -65,14 +65,16 @@ describe('Users', () => {
 
     it('should return names for node course', () => {
         var userList = users.getUserList('Node Course');
+        var names = userList.map((user) => user.name);
 
-        expect(userList).toEqual(['Mike','Julie']);
+        expect(names).toEqual(['Mike','Julie']);
     });
 
     it('should return names for react course', () => {
         var userList = users.getUserList('React Course');
+        var names = userList.map((user) => user.name);
 
-        expect(userList).toEqual(['Jen']);
+        expect(names).toEqual(['Jen']);
     });
 
 });

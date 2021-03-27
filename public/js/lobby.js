@@ -1,4 +1,5 @@
 var socket = io();
+var actualUser;
 
 function scrollToBottom () {
     //Selector
@@ -37,14 +38,19 @@ socket.on('connect', function () {
 
 socket.on('disconnect', function () {
     console.log("Disconnected from server");
-    console.log("ahoj");
 });
 
 socket.on('updateUserList', function (users) {
     var ol = jQuery('<ol></ol>');
 
     users.forEach(function (user) {
-        ol.append(jQuery('<li></li>').text(user));
+        if (user.id == this.socket.id){
+            //console.log(user);
+            ol.append(jQuery('<li style="background-color:#78AB46;color:white;font-weight: bold;"></li>').text(user.name));
+        } else {
+            ol.append(jQuery('<li></li>').text(user.name));
+        }
+        
     });
 
     jQuery('#users').html(ol);
