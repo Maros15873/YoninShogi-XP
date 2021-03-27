@@ -3,19 +3,28 @@
 
     <head>
         <meta charset="utf-8">
-        <title>Chat | ChatApp</title>
+        <title>Lobby | YoninShogi</title>
         <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
         <link rel="stylesheet" href="/css/styles.css">
+        
     </head>
 
     <body class="chat">
 
         <div class="chat__sidebar">
-            <h3>People</h3>
+            <div id="room-name"></div>
+            <h3>Players</h3>
             <div id="users"></div>
+            <h3>Game rules</h3>
+            <div id="gameRules"></div>
         </div>
 
+        <script id="room-template" type="text/template">
+            <h2 class="room__name">Room: {{room}}</h2>
+        </script>
+
         <div class="chat__main">
+
             <ol id="messages" class="chat__messages"></ol>
 
             <div class="chat__footer">
@@ -23,7 +32,6 @@
                     <input name="message" autofocus type="text" placeholder="Message" autocomplete="off" />
                     <button>Send</button>
                 </form>
-                <button id="send-location">Send location</button>
             </div>
         
         </div>
@@ -40,24 +48,12 @@
             </li>
         </script>
 
-        <script id="location-message-template" type="text/template">
-            <li class="message">
-                <div class="message__title">
-                    <h4>{{from}}</h4>
-                    <span>{{createdAt}}</span>
-                </div>
-                <div class="message__body">
-                    <a href="{{url}}" target="_blank">My current location</a>
-                </div>
-            </li>
-        </script>
-
         <script src="/socket.io/socket.io.js"></script>
         <script src="/js/libs/jquery-3.6.0.min.js"></script>
         <script src="/js/libs/moment.js"></script>
         <script src="/js/libs/mustache.js"></script>
         <script src="/js/libs/deparam.js"></script>
-        <script src="/js/chat.js"></script>
+        <script src="/js/lobby.js"></script>
     </body>
 
 </html>
