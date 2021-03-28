@@ -28,6 +28,7 @@ function checkLogin () {
     socket.emit('joinRoom', params, function (err) {
         if (err) {
             alert(err);
+            window.location.href = '/';
             return
         } 
         var template = jQuery('#room-template').html();
