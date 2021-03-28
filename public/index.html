@@ -10,23 +10,38 @@
 
     <body class="centered-form">
         <div class="centered-form__form">
-            <form action="/lobby.html">
+            <form id="connect-form" action="/lobby.html">
                 <div class="form-field"> 
                     <h3>YoninShogi</h3>
                 </div>
                 <div class="form-field"> 
                     <label>Player name</label>
-                    <input type="text" name="name" autofocus/>
+                    <input type="text" name="name" required autofocus/>
                 </div>
+                
                 <div class="form-field">
-                    <label>Room name</label>
+                    <label>Join active rooms</label>
+                    <div id="rooms"></div>    
+                </div>
+
+                <div class="form-field">
+                    <label>Create room</label>
                     <input type="text" name="room"/>    
                 </div>
+
                 <div class="form-field"> 
-                    <button>Join</button>
+                    <button name="btn" value="create">Create</button>
                 </div>
             </form>
         </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/libs/jquery-3.6.0.min.js"></script>
+    <script src="/js/libs/moment.js"></script>
+    <script src="/js/libs/mustache.js"></script>
+    <script src="/js/libs/deparam.js"></script>
+    <script src="/js/lobby.js"></script>
+
     </body>
 
 </html>

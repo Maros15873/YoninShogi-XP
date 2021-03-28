@@ -1,5 +1,4 @@
 var socket = io();
-var actualUser;
 
 function scrollToBottom () {
     //Selector
@@ -18,10 +17,35 @@ function scrollToBottom () {
     }
 }
 
+function checkLogin () {
+    var params = jQuery.deparam(window.location.search);
+    if (params.btn != "create") {
+        params.room = params.btn;
+    }
+
+    socket.emit('joinRoom', params, function (err) {
+        if (err) {
+            alert(err);
+            window.location.href = '/';
+        } else{
+            var template = jQuery('#room-template').html();
+            var html = Mustache.render(template, {
+                room: params.room
+            });
+
+            jQuery('#room-name').html(html);
+        }
+    });
+}
+
 socket.on('connect', function () {
+    socket.emit('join');
+});
+
+socket.on('connectToRoom', function () {
     var params = jQuery.deparam(window.location.search);
 
-    socket.emit('join', params, function (err) {
+    socket.emit('joinRoom', params, function (err) {
         if (err) {
             alert(err);
             window.location.href = '/';
@@ -40,11 +64,25 @@ socket.on('disconnect', function () {
     console.log("Disconnected from server");
 });
 
+socket.on('updateRoomList', function (rooms) {
+    var ol = jQuery('<div></div>');
+
+    if (rooms.length==0) {
+        ol.append(jQuery('<i>No active rooms</i>'));
+    } 
+    
+    rooms.forEach(function (room) {
+        ol.append(jQuery('<button name="btn" value="'+room.name+'"></button>').text(room.name));         
+    });
+
+    jQuery('#rooms').html(ol);
+});
+
 socket.on('updateUserList', function (users) {
     var ol = jQuery('<ol></ol>');
 
     users.forEach(function (user) {
-        if (user.id == this.socket.id){
+        if (user.id == this.socket.id) {
             //console.log(user);
             ol.append(jQuery('<li style="background-color:#78AB46;color:white;font-weight: bold;"></li>').text(user.name));
         } else {

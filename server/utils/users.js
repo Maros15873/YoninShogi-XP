@@ -11,6 +11,10 @@ class Users {
         this.users = [];
     }
 
+    isEmpty () {
+        return this.users.length == 0;
+    }
+
     addUser (id, name, room) {
         var user = new User(id, name, room);
         this.users.push(user);
