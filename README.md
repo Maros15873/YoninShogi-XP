@@ -7,6 +7,7 @@ commit
 spustenie
 - jeden zo sposobov je prikazom "nodemon server/server.js" (z priecinka kde je projekt)
 - vdaka 'nodemon' nemusite stale vypinat a zapinat server po ulozeni sa automaticky resetne
+- alebo napriklad "npm run dev"
 
 testovanie
 - prikazom "npm test"
