@@ -65,19 +65,6 @@ socket.on('disconnect', function () {
     console.log("Disconnected from server");
 });
 
-socket.on('updateRoomList', function (rooms) {
-    var ol = jQuery('<div></div>');
-
-    if (rooms.length==0) {
-        ol.append(jQuery('<i>No active rooms</i>'));
-    } 
-    
-    rooms.forEach(function (room) {
-        ol.append(jQuery('<button name="btn" value="'+room.name+'"></button>').text(room.name));         
-    });
-
-    jQuery('#rooms').html(ol);
-});
 
 socket.on('updateUserList', function (users) {
     var ol = jQuery('<ol></ol>');
