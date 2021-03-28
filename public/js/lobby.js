@@ -24,19 +24,18 @@ function checkLogin () {
     if (params.btn != "create") {
         params.room = params.btn;
     }
-
+    window.history.replaceState(null, null, window.location.pathname); // REMOVING PARAMS FROM URL
     socket.emit('joinRoom', params, function (err) {
         if (err) {
             alert(err);
-            window.location.href = '/';
-        } else{
-            var template = jQuery('#room-template').html();
-            var html = Mustache.render(template, {
-                room: params.room
-            });
+            return
+        } 
+        var template = jQuery('#room-template').html();
+        var html = Mustache.render(template, {
+            room: params.room
+        });
 
-            jQuery('#room-name').html(html);
-        }
+        jQuery('#room-name').html(html);
     });
 }
 
