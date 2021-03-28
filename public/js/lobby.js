@@ -17,7 +17,9 @@ function scrollToBottom () {
     }
 }
 
+// after log in, user is redirected to url > /lobby.html?name=eeee&room=aaa&btn=create
 function checkLogin () {
+    // params == { btn: "create", name: "player1", room: "room1" }
     var params = jQuery.deparam(window.location.search);
     if (params.btn != "create") {
         params.room = params.btn;
