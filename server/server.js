@@ -15,10 +15,6 @@ var server = http.createServer(app);
 var io = socketIO(server);
 var users = new Users();
 var rooms = new Rooms();
-// rooms.rooms = [new Room('A#123','A',[new User('1','Palo','A#123')]),
-// new Room('A#123','A',[new User('1','Palo','A#123')]),
-// new Room('A#123','A',[new User('1','Palo','A#123')]),
-// new Room('A#123','A',[new User('1','Palo','A#123')])];
 
 app.use(express.static(publicPath));
 
