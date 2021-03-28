@@ -9,8 +9,8 @@ spustenie
 - vdaka 'nodemon' nemusite stale vypinat a zapinat server po ulozeni sa automaticky resetne
 
 testovanie
-- prikazom "mpm test"
-- po korektnom zbehnuti vam ukaze vysledky vsetkych aktualne naprogramovanch testov
+- prikazom "npm test"
+- po korektnom zbehnuti vam ukaze vysledky vsetkych aktualne naprogramovanych testov
 
 kniznice
 - deparam (https://www.npmjs.com/package/deparam.js/v/2.1.0)
