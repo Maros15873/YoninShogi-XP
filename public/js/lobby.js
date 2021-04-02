@@ -17,6 +17,7 @@ function scrollToBottom () {
     }
 }
 
+
 // after log in, user is redirected to url > /lobby.html?name=eeee&room=aaa&btn=create
 function checkLogin () {
     // params == { btn: "create", name: "player1", room: "room1" }
@@ -24,6 +25,8 @@ function checkLogin () {
     if (params.btn != "create") {
         params.room = params.btn;
     }
+
+
     window.history.replaceState(null, null, window.location.pathname); // REMOVING PARAMS FROM URL
     socket.emit('joinRoom', params, function (err) {
         if (err) {
@@ -107,6 +110,22 @@ jQuery('#message-form').on('submit', function (e) {
         messageTextbox.val('');
     });
 });
+
+document.querySelector('#create-game-btn').onclick = (e) => {
+    socket.emit('listOfUsers', function () {
+        messageTextbox.val('');
+    });
+}
+
+socket.on('getUsers', function (data) {
+    console.log(data);
+    r = `game.html?id1=${data[0].id}&name1=${data[0].name}&room1=${data[0].room}`;
+    r += `&id2=${data[1].id}&name2=${data[1].name}&room2=${data[1].room}`;
+    r += `&id3=${data[2].id}&name3=${data[2].name}&room3=${data[2].room}`;
+    r += `&id4=${data[3].id}&name4=${data[3].name}&room4=${data[3].room}`;
+    window.location.href = r;
+});
+
 
 
 

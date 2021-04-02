@@ -1,4 +1,3 @@
-
 var socket = io();
 
 
@@ -14,7 +13,6 @@ document.querySelector('#create-room-btn').onclick = (e) => {
     window.location.href = `lobby.html?name=${playerName}&room=${roomName}&btn=create`;
 }
 
-
 // handle joining room by CODE
 document.querySelector('#enter-room-btn').onclick = (e) => {
     const playerName = document.querySelector('#player_name2').value;
@@ -27,7 +25,6 @@ document.querySelector('#enter-room-btn').onclick = (e) => {
     window.location.href = `lobby.html?name=${playerName}&btn=${roomCode}`;
 }
 
-
 // handle joinint active room
 const handleJoiningActiveRoom = (room) => {
     const playerName = document.querySelector('#player_name3').value;
@@ -38,7 +35,6 @@ const handleJoiningActiveRoom = (room) => {
     }
     window.location.href = `lobby.html?name=${playerName}&btn=${room}`;
 }
-
 
 // notify server about my presence
 socket.on('connect', function () {

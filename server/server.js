@@ -61,6 +61,16 @@ io.on('connection',(socket) => {
     });
 
 
+    socket.on('listOfUsers', (message, callback) => {
+        var user = users.getUser(socket.id);
+        var room = rooms.getRoom(user.room);
+        var userList = users.getUserList(room.id);
+
+        if (user) {
+            io.to(user.room).emit('getUsers', userList);
+        }
+
+    });
 
     socket.on('createMessage', (message, callback) => {
         var user = users.getUser(socket.id);
