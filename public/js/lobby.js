@@ -124,6 +124,7 @@ socket.on('getUsers', function (data) {
     r += `&id3=${data[2].id}&name3=${data[2].name}&room3=${data[2].room}`;
     r += `&id4=${data[3].id}&name4=${data[3].name}&room4=${data[3].room}`;
     window.location.href = r;
+    console.log("Marož to zle spravil");
 });
 
 

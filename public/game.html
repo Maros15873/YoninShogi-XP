@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <head>
+        <meta charset="utf-8" />
+        <title>Join | YoninShogi</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+        
+        <!-- JS -->
+        <script src="./js/libs/jquery-3.6.0.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="./js/login.js" defer></script>
+            
+        
+        <!-- CSS -->
+        <link
+            rel="stylesheet"
+            href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+            integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+            crossorigin="anonymous"
+        />
+        <link rel="stylesheet" href="./css/login_page.css" />
+    </head>
+    <body>
+        <!--
+        <div class="containter">
+            <div class="row">
+                <div class="col"></div>
+                <div class="col">
+                    
+                </div>
+                <div class="col"></div>
+            </div>
+        </div>-->
+
+        <div class="d-flex justify-content-center">
+            <canvas class = "align-middle" id="myCanvas" width="560" height="560" style="border:2px solid #d3d3d3;">
+            Your browser does not support the HTML5 canvas tag.</canvas>
+            <script>
+                var c=document.getElementById("myCanvas");
+                var ctx=c.getContext("2d");
+                
+                var pocetPoli = 9;
+
+                for(i=0; i<9; i++){
+                    for(j=0; j<9; j++){
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(50, i*j*i);
+                        ctx.stroke();
+                    }
+                }
+            </script>
+        </div>         
+    </body>
+</html>
