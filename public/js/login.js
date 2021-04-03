@@ -28,12 +28,17 @@ document.querySelector('#enter-room-btn').onclick = (e) => {
 // handle joinint active room
 const handleJoiningActiveRoom = (room) => {
     const playerName = document.querySelector('#player_name3').value;
+	var nameRoom = room.name;
 
     if(!playerName){
         document.querySelector('#no-name-error3').style.display = 'block';
         return;
     }
-    window.location.href = `lobby.html?name=${playerName}&btn=${room}`;
+	if(room.users.length == 4){
+		document.querySelector('#room-is-full').style.display = 'block';
+        return;
+	}
+    window.location.href = `lobby.html?name=${playerName}&btn=${nameRoom}`;
 }
 
 // notify server about my presence
@@ -53,7 +58,7 @@ socket.on('updateRoomList', function (rooms) {
         const button = document.createElement('button');
         button.innerHTML = `Room ${room.name}`;
         button.className = 'btn btn-primary';
-        button.onclick = () => handleJoiningActiveRoom(room.name);
+        button.onclick = () => handleJoiningActiveRoom(room);
         ol.append(button);         
     });
     jQuery('#rooms').html(ol);
