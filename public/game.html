@@ -7,10 +7,12 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
         
         <!-- JS -->
+        <script src="https://unpkg.com/konva@7.2.5/konva.min.js"></script>
         <script src="/socket.io/socket.io.js"></script>
         <script src="/js/libs/jquery-3.6.0.min.js"></script>
         <script src="/js/libs/deparam.js"></script>
         <script src="/js/game.js" defer></script>
+        <script src="/js/generatePictures.js"></script>
             
         
         <!-- CSS -->
@@ -23,34 +25,30 @@
         <link rel="stylesheet" href="./css/login_page.css" />
     </head>
     <body onload="start()">
-        <!--
-        <div class="containter">
-            <div class="row">
-                <div class="col"></div>
-                <div class="col">
-                    
-                </div>
-                <div class="col"></div>
+        <div class="row">
+            <div class="col"></div>
+            <div class="col">
+                <h1>TU BUDE CAS</h1>
             </div>
-        </div>-->
-
-        <div class="d-flex justify-content-center">
-            <canvas class = "align-middle" id="myCanvas" width="560" height="560" style="border:2px solid #d3d3d3;">
-            Your browser does not support the HTML5 canvas tag.</canvas>
-            <script>
-                var c=document.getElementById("myCanvas");
-                var ctx=c.getContext("2d");
-                
-                var pocetPoli = 9;
-
-                for(i=0; i<9; i++){
-                    for(j=0; j<9; j++){
-                        ctx.moveTo(0, 0);
-                        ctx.lineTo(50, i*j*i);
-                        ctx.stroke();
-                    }
-                }
-            </script>
-        </div>         
+            <div class="col"></div>
+        </div>
+        <div class="row">
+            <div class="col"></div>
+            <div class="col">
+                <canvas id="chess-board"></canvas>
+            </div>
+            <div class="col"></div>
+        </div>
+            
+        <style>
+            main {
+                max-width: 100%;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                text-align: center;
+            }
+        </style>   
     </body>
 </html>
