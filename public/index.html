@@ -9,7 +9,6 @@
     <script src="./js/libs/jquery-3.6.0.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="./js/login.js" defer></script>
-    
 
     <!-- CSS -->
     <link
@@ -59,10 +58,8 @@
           </div>
         </div>
 
-
         <!-- ////////////////////////////////////// -->
         <!-- Join room by code -->
-
 
         <!-- simple divider two contents -->
         <div class="content-wrapper">
@@ -98,33 +95,32 @@
           </div>
         </div>
 
-
-          <!-- ////////////////////////////////////// -->
-          <!-- show active roms -->
-          <div class="content-wrapper">
-            <div class="divider"></div>
+        <!-- ////////////////////////////////////// -->
+        <!-- show active roms -->
+        <div class="content-wrapper">
+          <div class="divider"></div>
+        </div>
+        <div class="content-wrapper">
+          <!-- Show error if player provided no name -->
+          <div class="alert alert-danger" id="no-name-error3" style="display: none">
+            <strong>Player name is required!</strong>
           </div>
-          <div class="content-wrapper">
-             <!-- Show error if player provided no name -->
-            <div class="alert alert-danger" id="no-name-error3" style="display: none">
-              <strong>Player name is required!</strong>
-            </div>
-			<div class="alert alert-danger" id="room-is-full" style="display: none">
-              <strong>Selected room is already full!</strong>
-            </div>
-            <div class="content-wrapper-title">Join active rooms</div>
-
-            <!-- player name input -->
-            <div class="input-group mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text" id="basic-addon3">Player name</span>
-              </div>
-              <input type="text" class="form-control" id="player_name3" placeholder="Enter your name" name="name" required />
-            </div>
-            
-            <!-- list existing rooms -->
-            <div id="rooms"></div>    
+          <div class="alert alert-danger" id="room-is-full" style="display: none">
+            <strong>Selected room is already full!</strong>
           </div>
+          <div class="content-wrapper-title">Join active rooms</div>
+
+          <!-- player name input -->
+          <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text" id="basic-addon3">Player name</span>
+            </div>
+            <input type="text" class="form-control" id="player_name3" placeholder="Enter your name" name="name" required />
+          </div>
+
+          <!-- list existing rooms -->
+          <div id="rooms"></div>
+        </div>
       </section>
     </main>
   </body>
