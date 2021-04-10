@@ -63,10 +63,9 @@ io.on('connection',(socket) => {
 
     socket.on('listOfUsers', (message, callback) => {
         var user = users.getUser(socket.id);
-        var room = rooms.getRoom(user.room);
-        var userList = users.getUserList(room.id);
-
         if (user) {
+            var room = rooms.getRoom(user.room);
+            var userList = users.getUserList(room.id);
             io.to(user.room).emit('getUsers', userList);
         }
 

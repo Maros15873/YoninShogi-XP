@@ -108,10 +108,16 @@ document.querySelector('#message_send_button').onclick = (e) => {
     input.value = ''; // clear intput
 };
 
+// Ready to play the game
 document.querySelector('#create-game-btn').onclick = (e) => {
-    socket.emit('listOfUsers', function () {
-        messageTextbox.val('');
-    });
+    const form = document.querySelector('#game_options_form');
+
+    const gameTime = form.elements['game_time_select'].value;
+    const byoyomi = form.elements['byoyomi_select'].value;
+    const isTeamPlay = form.elements['team_play_true'].checked;
+    //console.log(gameTime, byoyomi, isTeamPlay)
+
+    socket.emit('listOfUsers');
 }
 
 socket.on('getUsers', function (data) {
