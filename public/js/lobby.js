@@ -86,11 +86,13 @@ socket.on('updateUserList', function (users) {
     jQuery('#users').html(ol);
 });
 
-socket.on('newMessage', function (message) {
-    var formattedTime = moment(message.createdAt).format('h:mm a');
-    var template = jQuery('#message-template').html();
-    var html = Mustache.render(template, {
-        text: message.text, 
+// Receive message though chat
+socket.on('newMessage', (message) => {
+    const formattedTime = moment(message.createdAt).format('h:mm a');
+    const template = jQuery('#message-template').html();
+
+    const html = Mustache.render(template, {
+        text: atob(message.text), //decode text
         from: message.from,
         createdAt: formattedTime
     });
@@ -99,17 +101,12 @@ socket.on('newMessage', function (message) {
     scrollToBottom();
 });
 
-jQuery('#message-form').on('submit', function (e) {
-    e.preventDefault();
-
-    var messageTextbox = jQuery('[name=message]');
-
-    socket.emit('createMessage', {
-        text: messageTextbox.val()
-    }, function () {
-        messageTextbox.val('');
-    });
-});
+// Send message though chat
+document.querySelector('#message_send_button').onclick = (e) => {
+    const input = document.querySelector('input[name=message]');
+    socket.emit('createMessage', btoa(input.value)); // send base 64 encoded text
+    input.value = ''; // clear intput
+};
 
 document.querySelector('#create-game-btn').onclick = (e) => {
     socket.emit('listOfUsers', function () {
