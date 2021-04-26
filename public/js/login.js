@@ -9,7 +9,7 @@ document.querySelector('#create-room-btn').onclick = (e) => {
     document.querySelector('#no-name-error1').style.display = 'block';
     return;
   }
-  window.location.href = `lobby.html?name=${playerName}&room=${roomName}&btn=create`;
+  window.location.href = `lobby.html?name=${playerName}&room=${roomName}&btn=create&uuid=${uuidv4()}`;
 };
 
 // handle joining room by CODE
@@ -21,7 +21,7 @@ document.querySelector('#enter-room-btn').onclick = (e) => {
     document.querySelector('#no-name-error2').style.display = 'block';
     return;
   }
-  window.location.href = `lobby.html?name=${playerName}&btn=${roomCode}`;
+  window.location.href = `lobby.html?name=${playerName}&btn=${roomCode}&uuid=${uuidv4()}`;
 };
 
 // handle joinint active room
@@ -37,12 +37,15 @@ const handleJoiningActiveRoom = (room) => {
     document.querySelector('#room-is-full').style.display = 'block';
     return;
   }
-  window.location.href = `lobby.html?name=${playerName}&btn=${nameRoom}`;
+  window.location.href = `lobby.html?name=${playerName}&btn=${nameRoom}&uuid=${uuidv4()}`;
 };
+
+
 
 // notify server about my presence
 socket.on('connect', function () {
   socket.emit('join');
+  socket.emit('get_available_rooms');
 });
 
 // show active rooms
@@ -62,3 +65,14 @@ socket.on('updateRoomList', function (rooms) {
   });
   jQuery('#rooms').html(ol);
 });
+
+
+const uuidv4 = () => {
+  const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+
+  localStorage.setItem('UUID', uuid); // side effect but f*ck it
+  return uuid;
+}

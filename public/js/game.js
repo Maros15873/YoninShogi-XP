@@ -30,11 +30,17 @@ pawns.push(pawn7);pawns.push(pawn8);pawns.push(pawn9);pawns.push(pawn10);pawns.p
 
 //var a = [King, GoldenGenera, SilverGeneral, PromotedSilverGeneral, Rook, PromotedRook, Pawn, PromotedPawn];
 
+// notify server about my presence
+socket.on('connect', function () {
+    socket.emit('join');
+});
 
 //Tomas, tuto funkciu si pomenuj ako chces, zmen ju alebo zmaz
 function start () {
     var params = jQuery.deparam(window.location.search);
     console.log(params);
+    console.log('-------------')
+    console.log(JSON.parse(localStorage.getItem('CURRENT_GAME')));
     /*
     //hrac1
     console.log(params.id1);

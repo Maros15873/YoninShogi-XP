@@ -20,7 +20,7 @@ function scrollToBottom () {
 
 // after log in, user is redirected to url > /lobby.html?name=eeee&room=aaa&btn=create
 function checkLogin () {
-    // params == { btn: "create", name: "player1", room: "room1" }
+    // params == { btn: "create", name: "player1", room: "room1", uuid: "xxx-xx-..." }
     var params = jQuery.deparam(window.location.search);
     if (params.btn != "create") {
         params.room = params.btn;
@@ -43,6 +43,7 @@ function checkLogin () {
     });
 }
 
+// init new socket connection to server
 socket.on('connect', function () {
     socket.emit('join');
 });
@@ -72,9 +73,10 @@ socket.on('disconnect', function () {
 
 socket.on('updateUserList', function (users) {
     var ol = jQuery('<ol></ol>');
+    const uuid = localStorage.getItem('UUID');
 
     users.forEach(function (user) {
-        if (user.id == this.socket.id) {
+        if (user.id == uuid) {
             //console.log(user);
             ol.append(jQuery('<li style="background-color:#78AB46;color:white;font-weight: bold;"></li>').text(user.name));
         } else {
@@ -104,7 +106,9 @@ socket.on('newMessage', (message) => {
 // Send message though chat
 document.querySelector('#message_send_button').onclick = (e) => {
     const input = document.querySelector('input[name=message]');
-    socket.emit('createMessage', btoa(input.value)); // send base 64 encoded text
+    const uuid = localStorage.getItem('UUID');
+
+    socket.emit('createMessage', btoa(input.value), uuid); // send base 64 encoded text
     input.value = ''; // clear intput
 };
 
@@ -117,11 +121,14 @@ document.querySelector('#create-game-btn').onclick = (e) => {
     const isTeamPlay = form.elements['team_play_true'].checked;
     //console.log(gameTime, byoyomi, isTeamPlay)
 
-    socket.emit('listOfUsers');
+    const uuid = localStorage.getItem('UUID');
+
+    socket.emit('listOfUsers', uuid);
 }
 
 socket.on('getUsers', function (data) {
     console.log(data);
+    localStorage.setItem('CURRENT_GAME', JSON.stringify(data));
     r = `game.html?id1=${data[0].id}&name1=${data[0].name}&room1=${data[0].room}`;
     r += `&id2=${data[1].id}&name2=${data[1].name}&room2=${data[1].room}`;
     r += `&id3=${data[2].id}&name3=${data[2].name}&room3=${data[2].room}`;
