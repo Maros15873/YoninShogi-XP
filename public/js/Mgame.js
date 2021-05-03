@@ -2,7 +2,6 @@ var canvas = document.getElementById("hracia_plocha");
 var ctx = canvas.getContext("2d");
 ctx.fillStyle = "#FFFFFF";
 
-
 canvas.width = 900;
 canvas.height = 900;
 
@@ -14,47 +13,98 @@ starting_positions.set(1, {king: [[0,4]], pawn: [[2,4],[1,3],[1,5]], silver: [[0
 starting_positions.set(2, {king: [[4,0]], pawn: [[4,2],[5,1],[3,1]], silver: [[2,0],[6,0]], gold: [[3,0],[5,0]], rook: [[4,1]]});
 starting_positions.set(3, {king: [[8,4]], pawn: [[7,3],[7,5],[6,4]], silver: [[8,2],[8,6]], gold: [[8,3],[8,5]], rook: [[7,4]]});
 
-class Square{
+class Plate{
 
-    constructor(x,y,col,row){
+    constructor(x,y,width,height,player_id,deg){
         this.x = x;
         this.y = y;
-        this.column = col;
-        this.row = row;
+        this.width = width;
+        this.height = height;
+        this.deg = deg;
+        this.player_id = player_id;
+        
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.deg * Math.PI / 180);
+        ctx.translate(-this.x, -this.y);
+        this.obj = ctx.strokeRect(this.x - (this.width/2), this.y - (this.height/2), this.width, this.height);
+        this.prisoners = this.fillPrisoners();
+        ctx.restore();
+    }
+
+    fillPrisoners(){
+        var matrix = Array(4).fill();
+        var names = ["pawn","silver","gold","rook"];
+        for (var i = 0; i < 4; i++){
+            matrix[i] = new Prisoner(this.x - (this.width/2)+90+i*80, this.y - (this.height/2)+90, names[i],this.player_id,this.deg);
+        }
+        return matrix;
+    }
+
+    updatePrisoner(index){
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.deg * Math.PI / 180);
+        ctx.translate(-this.x, -this.y);
+        this.prisoners[index].addPrisoner();
+        ctx.restore();
+    }
+
+}
+
+class Prisoner{
+
+    constructor(x,y,name,player_id,deg){
+        this.x = x;
+        this.y = y;
+        this.number = 0;
+        this.name = name;
         this.width = 60;
         this.height = 60;
-        this.obj = ctx.strokeRect(this.x, this.y, this.width, this.height);
-        this.piece = null;
+        this.deg = deg;
+        this.player_id = player_id;
+
+        //this.obj = ctx.strokeRect(this.x, this.y, this.width, this.height);
+        this.obj = new Square(this.x, this.y, null,null);
+        this.obj_name = ctx.fillText(this.name, this.x, this.y-10);
+        this.obj_number =  ctx.fillText(this.number, this.x, this.y+70);
+        //this.piece = null;
+
     }
 
-    highlight(){
-        ctx.strokeStyle = "#32CD32";
+    updateNumber(){
+        
+        ctx.fillStyle = "white";
+        ctx.fillRect(this.x-10, this.y-20, this.width+20, this.height+40);//premazanie
+        ctx.fillStyle = "black";
+
         this.obj = ctx.strokeRect(this.x, this.y, this.width, this.height);
+        this.obj_name = ctx.fillText(this.name, this.x, this.y-10);
+        this.obj_number =  ctx.fillText(this.number, this.x, this.y+70);
     }
 
-    addPiece(type,player_id){
+    addPrisoner(){
+        this.number = this.number + 1;
+        this.updateNumber();
+    }
+
+    removePrisoner(){
+        this.number = this.number - 1;
+        this.updateNumber();
+    }
+
+    addPiece(type){
+        var dir = "img/shogi-set-01/";
         var deg = [0,90,180,-90];
-        if (type == "king"){
-            this.piece = new King(this.x+5, this.y+5,this.column,this.row,"img/shogi-set-01/king.gif",player_id, deg[player_id]);
-        } else if (type == "pawn"){
-            this.piece = new Pawn(this.x+5, this.y+5,this.column,this.row,"img/shogi-set-01/pawn.gif",player_id, deg[player_id], false);
+        
+        if (type == "pawn"){
+            this.piece = new Pawn(100, 100,null,null,dir + "pawn.gif", type,this.player_id, deg[this.player_id], false);
         } else if (type == "silver"){
-            this.piece = new Silver(this.x+5, this.y+5,this.column,this.row,"img/shogi-set-01/silver.gif",player_id, deg[player_id], false);
+            this.piece = new Silver(this.x, this.y,null,null,dir + "silver.gif", type,this.player_id, deg[this.player_id], false); 
         } else if (type == "gold"){
-            this.piece = new Gold(this.x+5, this.y+5,this.column,this.row,"img/shogi-set-01/gold.gif",player_id, deg[player_id]);
+            this.piece = new Gold(this.x, this.y,null,null,dir + "gold.gif", type,this.player_id, deg[this.player_id]);
         } else if (type == "rook"){
-            this.piece = new Rook(this.x+5, this.y+5,this.column,this.row,"img/shogi-set-01/rook.gif",player_id, deg[player_id], false);
-        }
-    }
-
-    update(){
-        if (this.piece != null) {
-            //console.log(this.piece);
-            ctx.fillStyle = "#FFFFFF";
-            ctx.fillRect(this.x, this.y, this.width, this.height);
-            ctx.strokeStyle = "#000000";
-            this.obj = ctx.strokeRect(this.x, this.y, this.width, this.height);
-            this.piece.update();
+            this.piece = new Rook(this.x, this.y,null,null,dir + "rook.gif" ,type,this.player_id, deg[this.player_id], false);
         }
     }
 
@@ -89,61 +139,63 @@ class Board{
 
 }
 
-class Plate{
+class Square{
 
-    constructor(x,y,width,height,deg){
+    constructor(x,y,col,row){
         this.x = x;
         this.y = y;
-        this.width = width;
-        this.height = height;
-        
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(deg * Math.PI / 180);
-        ctx.translate(-this.x, -this.y);
-        this.obj = ctx.strokeRect(this.x - (this.width/2), this.y - (this.height/2), this.width, this.height);
-        this.prisoners = this.fillPrisoners();
-        ctx.restore();
-    }
-
-    fillPrisoners(){
-        var matrix = Array(4).fill();
-        var names = ["pawn","silver","gold","rook"];
-        for (var i = 0; i < 4; i++){
-            matrix[i] = new Prisoner(this.x - (this.width/2)+90+i*80, this.y - (this.height/2)+90, names[i]);
-        }
-        return matrix;
-    }
-
-}
-
-class Prisoner{
-
-    constructor(x,y,name){
-        this.x = x;
-        this.y = y;
-        this.number = 0;
-        this.name = name;
+        this.column = col;
+        this.row = row;
         this.width = 60;
         this.height = 60;
-
         this.obj = ctx.strokeRect(this.x, this.y, this.width, this.height);
-        this.obj_name = ctx.fillText(this.name, this.x, this.y-10);
-        this.obj_number =  ctx.fillText(this.number, this.x, this.y+70);
+        this.piece = null;
+    }
 
+    highlight(){
+        ctx.strokeStyle = "#32CD32";
+        this.obj = ctx.strokeRect(this.x, this.y, this.width, this.height);
+    }
+
+    addPiece(type,player_id){
+        var dir = "img/shogi-set-01/";
+        var deg = [0,90,180,-90];
+        if (type == "king"){
+            this.piece = new King(this.x+5, this.y+5,this.column,this.row, dir + "king.gif", type,player_id, deg[player_id]);
+        } else if (type == "pawn"){
+            this.piece = new Pawn(this.x+5, this.y+5,this.column,this.row,dir + "pawn.gif", type,player_id, deg[player_id], false);
+        } else if (type == "silver"){
+            this.piece = new Silver(this.x+5, this.y+5,this.column,this.row,dir + "silver.gif", type,player_id, deg[player_id], false);
+        } else if (type == "gold"){
+            this.piece = new Gold(this.x+5, this.y+5,this.column,this.row,dir + "gold.gif", type,player_id, deg[player_id]);
+        } else if (type == "rook"){
+            this.piece = new Rook(this.x+5, this.y+5,this.column,this.row,dir + "rook.gif" ,type,player_id, deg[player_id], false);
+        }
+    }
+
+    update(){
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+        ctx.strokeStyle = "#000000";
+        this.obj = ctx.strokeRect(this.x, this.y, this.width, this.height);
+        if (this.piece != null) {
+            //console.log(this.piece);
+            this.piece.update();
+        }
     }
 
 }
 
 class Piece{
 
-    constructor(x,y,column, row, src, player_id, deg){
+    constructor(x,y,column, row, src, type, player_id, deg){
         this.x = x;
         this.y = y;
         this.column = column;
         this.row = row;
         this.img = new Image();
         this.img.src = src;
+        this.type = type;
         this.img.onload = () => {
             ctx.save();
             ctx.translate(this.x+25, this.y+25);
@@ -166,18 +218,43 @@ class Piece{
         this.promoted = false;
     }
 
-    makeMove(column, row){
+    makeMove(col,row){
+
+        if (board.squares[col][row].piece != null) {
+            console.log(board.squares[col][row].piece.type);
+            if (board.squares[col][row].piece.type == "pawn"){
+                players[this.player_id].updatePrisoner(0);
+            } else if (board.squares[col][row].piece.type == "silver"){
+                players[this.player_id].updatePrisoner(1);
+            } else if (board.squares[col][row].piece.type == "gold"){
+                players[this.player_id].updatePrisoner(2);
+            } else if (board.squares[col][row].piece.type == "rook"){
+                players[this.player_id].updatePrisoner(3);
+            }
+            board.squares[col][row].addPiece(board.squares[this.column][this.row].piece.type, board.squares[this.column][this.row].piece.player_id);
+            board.squares[col][row].update();
+        } else {
+            board.squares[col][row].addPiece(board.squares[this.column][this.row].piece.type, board.squares[this.column][this.row].piece.player_id);   
+        }
+
+        board.squares[this.column][this.row].piece = null;
+        board.squares[this.column][this.row].update();
         
     }
 
     isValidMove(column, row){
+
+        if (board.squares[column][row].piece != null && board.squares[column][row].piece.player_id == this.player_id) {
+            return false;
+        }
+
         if (!(column >= 0 && column <= 8 && row >= 0 && row <= 8)){
             return false;
         }
-        var move = [this.column-column, this.row-row];
+        var move = [column-this.column,row - this.row];
         if (this.promoted){
             for (var i = 0; i < this.promoted_moves.length; i++){
-                if (this.compare(this.promoted_moves[i], move)) {
+                if (this.compare(this.promoted_moves[i], move)) {                   
                     return true;
                 }
             }
@@ -203,8 +280,8 @@ class Piece{
 
 class King extends Piece{
 
-    constructor(x,y,column, row, src, player_id, deg){
-        super(x,y,column, row, src, player_id, deg);
+    constructor(x,y,column, row, src, type, player_id, deg){
+        super(x,y,column, row, src, type, player_id, deg);
         this.moves = [[0,1],[0,-1],[-1,0],[1,0],[-1,1],[-1,-1],[1,1],[1,-1]];
     }
 
@@ -212,39 +289,39 @@ class King extends Piece{
 
 class Pawn extends Piece{
 
-    constructor(x,y,column, row, src, player_id, deg, promoted){
-        super(x,y,column, row, src, player_id, deg);
+    constructor(x,y,column, row, src, type, player_id, deg, promoted){
+        super(x,y,column, row, src, type, player_id, deg);
         this.promoted = promoted;
-        this.moves = [[0,1]];
-        this.promoted_moves = [[0,1],[0,-1],[-1,0],[1,0],[-1,1],[1,1]];
+        this.moves = [[0,-1]];
+        this.promoted_moves = [[0,-1],[0,1],[1,0],[-1,0],[1,-1],[-1,-1]];
     }
 
 }
 
 class Silver extends Piece{
 
-    constructor(x,y,column, row, src, player_id, deg, promoted){
-        super(x,y,column, row, src, player_id, deg);
+    constructor(x,y,column, row, src, type, player_id, deg, promoted){
+        super(x,y,column, row, src, type, player_id, deg);
         this.promoted = promoted;
-        this.moves = [[0,1],[-1,1],[-1,-1],[1,1],[1,-1]];
-        this.promoted_moves = [[0,1],[0,-1],[-1,0],[1,0],[-1,1],[1,1]];
+        this.moves = [[0,-1],[1,-1],[1,1],[-1,-1],[-1,1]];
+        this.promoted_moves = [[0,-1],[0,1],[1,0],[-1,0],[1,-1],[-1,-1]];
     }
 
 }
 
 class Gold extends Piece{
 
-    constructor(x,y,column, row, src, player_id, deg){
-        super(x,y,column, row, src, player_id, deg);
-        this.moves = [[0,1],[0,-1],[-1,0],[1,0],[-1,1],[1,1]];
+    constructor(x,y,column, row, src, type, player_id, deg){
+        super(x,y,column, row, src, type, player_id, deg);
+        this.moves = [[0,-1],[0,1],[1,0],[-1,0],[1,-1],[-1,-1]];
     }
 
 }
 
 class Rook extends Piece{
 
-    constructor(x,y,column, row, src, player_id, deg, promoted){
-        super(x,y,column, row, src, player_id, deg);
+    constructor(x,y,column, row, src, type, player_id, deg, promoted){
+        super(x,y,column, row, src, type, player_id, deg);
         this.promoted = promoted;
         this.moves = [[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[0,7],[0,8],
                       [0,-1],[0,-2],[0,-3],[0,-4],[0,-5],[0,-6],[0,-7],[0,-8],
@@ -277,7 +354,9 @@ function getSquareByCoord(x,y) {
     y = Math.floor((y - start_point[1])/tile_size);
 
     if (!(x >= 0 && x <= 8 && y <= 8 && y >=0)) {
-        selected_piece.update();
+        if (selected_piece != null) {
+            selected_piece.update();
+        }
         selected_piece = null;
         return null;
     }
@@ -306,10 +385,7 @@ function getSquareByCoord(x,y) {
 
 
 board = new Board();
-plate1 = new Plate(90,450,540,180,90);
-plate2 = new Plate(810,450,540,180,-90);
-plate3 = new Plate(450,90,540,180,180);
-plate4 = new Plate(450,810,540,180,0);
+players = [new Plate(450,810,540,180,0,0),new Plate(90,450,540,180,1,90),new Plate(450,90,540,180,2,180),new Plate(810,450,540,180,3,-90)];
 
 deg = [0,90,180,-90];
 for (var i = 0; i < 4; i ++){
