@@ -61,10 +61,6 @@ class Rooms{
     getRoom (id) {
         return this.rooms.filter((room) => room.id === id)[0];
     }
-	
-	getRoomByName (name) {
-        return this.rooms.filter((room) => room.name === name)[0];
-    }
 
     getRoomList () {
         return this.rooms;

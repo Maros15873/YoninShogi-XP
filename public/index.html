@@ -1,127 +1,47 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Join | YoninShogi</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 
-    <!-- JS -->
-    <script src="./js/libs/jquery-3.6.0.min.js"></script>
+    <head>
+        <meta charset="utf-8">
+        <title>Join | YoninShogi</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+        <link rel="stylesheet" href="/css/styles.css">
+    </head>
+
+    <body class="centered-form">
+        <div class="centered-form__form">
+            <form id="connect-form" action="/lobby.html">
+                <div class="form-field"> 
+                    <h3>YoninShogi</h3>
+                </div>
+                <div class="form-field"> 
+                    <label>Player name</label>
+                    <input type="text" name="name" required autofocus/>
+                </div>
+                
+                <div class="form-field">
+                    <label>Join active rooms</label>
+                    <div id="rooms"></div>    
+                </div>
+
+                <div class="form-field">
+                    <label>Create room</label>
+                    <input type="text" name="room"/>    
+                </div>
+
+                <div class="form-field"> 
+                    <button name="btn" value="create">Create</button>
+                </div>
+            </form>
+        </div>
+
     <script src="/socket.io/socket.io.js"></script>
-    <script src="./js/login.js" defer></script>
+    <script src="/js/libs/jquery-3.6.0.min.js"></script>
+    <script src="/js/libs/moment.js"></script>
+    <script src="/js/libs/mustache.js"></script>
+    <script src="/js/libs/deparam.js"></script>
+    <script src="/js/lobby.js"></script>
 
-    <!-- CSS -->
-    <link
-      rel="stylesheet"
-      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
-      crossorigin="anonymous"
-    />
-    <link rel="stylesheet" href="./css/login_page.css" />
-  </head>
+    </body>
 
-  <!-- code goes here -->
-  <body>
-    <div class="background-img"></div>
-    <main>
-      <div class="title-shogi-wrapper">
-        <div class="title-shogi">YoninShogi</div>
-      </div>
-
-      <section>
-        <!-- players name -->
-        <div class="content-wrapper">
-          <!-- Show error if player provided no name -->
-          <div class="alert alert-danger" id="no-name-error1" style="display: none">
-            <strong>Player and room name is required!</strong> Please fill your data
-          </div>
-
-          <div class="content-wrapper-title">Create room</div>
-          <!-- player name input -->
-          <div class="input-group mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text" id="basic-addon3">Player name</span>
-            </div>
-            <input type="text" class="form-control" id="player_name" placeholder="Enter your name" name="name" required />
-          </div>
-          <!-- room name input -->
-          <div class="input-group mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text" id="basic-addon3">Room name</span>
-            </div>
-            <input type="text" class="form-control" id="room_name" placeholder="Enter your name" name="room_name" required />
-          </div>
-
-          <!-- create room button -->
-          <div>
-            <button type="button" class="btn btn-primary" id="create-room-btn" value="create">Create room</button>
-          </div>
-        </div>
-
-        <!-- ////////////////////////////////////// -->
-        <!-- Join room by code -->
-
-        <!-- simple divider two contents -->
-        <div class="content-wrapper">
-          <div class="divider"></div>
-        </div>
-
-        <!-- code to enter the room -->
-        <div class="content-wrapper">
-          <!-- Show error if player provided no name -->
-          <div class="alert alert-danger" id="no-name-error2" style="display: none">
-            <strong>Player and room code is required!</strong> Please fill your data
-          </div>
-
-          <div class="content-wrapper-title">Find room</div>
-          <!-- player name input -->
-          <div class="input-group mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text" id="basic-addon3">Player name</span>
-            </div>
-            <input type="text" class="form-control" id="player_name2" placeholder="Enter your name" name="name" required />
-          </div>
-
-          <!-- room code input -->
-          <div class="input-group mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text" id="basic-addon1">#Code</span>
-            </div>
-            <input type="text" class="form-control" placeholder="Room code" id="room_code" />
-          </div>
-          <!-- create room button -->
-          <div>
-            <button type="button" class="btn btn-success" style="min-width: 105px" id="enter-room-btn">Enter</button>
-          </div>
-        </div>
-
-        <!-- ////////////////////////////////////// -->
-        <!-- show active roms -->
-        <div class="content-wrapper">
-          <div class="divider"></div>
-        </div>
-        <div class="content-wrapper">
-          <!-- Show error if player provided no name -->
-          <div class="alert alert-danger" id="no-name-error3" style="display: none">
-            <strong>Player name is required!</strong>
-          </div>
-          <div class="alert alert-danger" id="room-is-full" style="display: none">
-            <strong>Selected room is already full!</strong>
-          </div>
-          <div class="content-wrapper-title">Join active rooms</div>
-
-          <!-- player name input -->
-          <div class="input-group mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text" id="basic-addon3">Player name</span>
-            </div>
-            <input type="text" class="form-control" id="player_name3" placeholder="Enter your name" name="name" required />
-          </div>
-
-          <!-- list existing rooms -->
-          <div id="rooms"></div>
-        </div>
-      </section>
-    </main>
-  </body>
 </html>

@@ -17,33 +17,27 @@ function scrollToBottom () {
     }
 }
 
-
-// after log in, user is redirected to url > /lobby.html?name=eeee&room=aaa&btn=create
 function checkLogin () {
-    // params == { btn: "create", name: "player1", room: "room1", uuid: "xxx-xx-..." }
     var params = jQuery.deparam(window.location.search);
     if (params.btn != "create") {
         params.room = params.btn;
     }
 
-
-    window.history.replaceState(null, null, window.location.pathname); // REMOVING PARAMS FROM URL
     socket.emit('joinRoom', params, function (err) {
         if (err) {
             alert(err);
             window.location.href = '/';
-            return
-        } 
-        var template = jQuery('#room-template').html();
-        var html = Mustache.render(template, {
-            room: params.room
-        });
+        } else{
+            var template = jQuery('#room-template').html();
+            var html = Mustache.render(template, {
+                room: params.room
+            });
 
-        jQuery('#room-name').html(html);
+            jQuery('#room-name').html(html);
+        }
     });
 }
 
-// init new socket connection to server
 socket.on('connect', function () {
     socket.emit('join');
 });
@@ -70,13 +64,25 @@ socket.on('disconnect', function () {
     console.log("Disconnected from server");
 });
 
+socket.on('updateRoomList', function (rooms) {
+    var ol = jQuery('<div></div>');
+
+    if (rooms.length==0) {
+        ol.append(jQuery('<i>No active rooms</i>'));
+    } 
+    
+    rooms.forEach(function (room) {
+        ol.append(jQuery('<button name="btn" value="'+room.name+'"></button>').text(room.name));         
+    });
+
+    jQuery('#rooms').html(ol);
+});
 
 socket.on('updateUserList', function (users) {
     var ol = jQuery('<ol></ol>');
-    const uuid = localStorage.getItem('UUID');
 
     users.forEach(function (user) {
-        if (user.id == uuid) {
+        if (user.id == this.socket.id) {
             //console.log(user);
             ol.append(jQuery('<li style="background-color:#78AB46;color:white;font-weight: bold;"></li>').text(user.name));
         } else {
@@ -88,13 +94,11 @@ socket.on('updateUserList', function (users) {
     jQuery('#users').html(ol);
 });
 
-// Receive message though chat
-socket.on('newMessage', (message) => {
-    const formattedTime = moment(message.createdAt).format('h:mm a');
-    const template = jQuery('#message-template').html();
-
-    const html = Mustache.render(template, {
-        text: atob(message.text), //decode text
+socket.on('newMessage', function (message) {
+    var formattedTime = moment(message.createdAt).format('h:mm a');
+    var template = jQuery('#message-template').html();
+    var html = Mustache.render(template, {
+        text: message.text, 
         from: message.from,
         createdAt: formattedTime
     });
@@ -103,40 +107,17 @@ socket.on('newMessage', (message) => {
     scrollToBottom();
 });
 
-// Send message though chat
-document.querySelector('#message_send_button').onclick = (e) => {
-    const input = document.querySelector('input[name=message]');
-    const uuid = localStorage.getItem('UUID');
+jQuery('#message-form').on('submit', function (e) {
+    e.preventDefault();
 
-    socket.emit('createMessage', btoa(input.value), uuid); // send base 64 encoded text
-    input.value = ''; // clear intput
-};
+    var messageTextbox = jQuery('[name=message]');
 
-// Ready to play the game
-document.querySelector('#create-game-btn').onclick = (e) => {
-    const form = document.querySelector('#game_options_form');
-
-    const gameTime = form.elements['game_time_select'].value;
-    const byoyomi = form.elements['byoyomi_select'].value;
-    const isTeamPlay = form.elements['team_play_true'].checked;
-    //console.log(gameTime, byoyomi, isTeamPlay)
-
-    const uuid = localStorage.getItem('UUID');
-
-    socket.emit('listOfUsers', uuid);
-}
-
-socket.on('getUsers', function (data) {
-    console.log(data);
-    localStorage.setItem('CURRENT_GAME', JSON.stringify(data));
-    r = `game.html?id1=${data[0].id}&name1=${data[0].name}&room1=${data[0].room}`;
-    r += `&id2=${data[1].id}&name2=${data[1].name}&room2=${data[1].room}`;
-    r += `&id3=${data[2].id}&name3=${data[2].name}&room3=${data[2].room}`;
-    r += `&id4=${data[3].id}&name4=${data[3].name}&room4=${data[3].room}`;
-    window.location.href = r;
-    console.log("Marož to zle spravil");
+    socket.emit('createMessage', {
+        text: messageTextbox.val()
+    }, function () {
+        messageTextbox.val('');
+    });
 });
-
 
 
 
