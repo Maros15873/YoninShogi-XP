@@ -24,7 +24,7 @@ describe('Users', () => {
     it('should add new user', () => {
         var users = new Users();
         var user = new User('123','Andrew','The Office fans');
-        users.addUser(user.id, user.name, user.room);
+        users.addUser(user);
 
         expect(users.users).toEqual([user]);
     });
