@@ -1,0 +1,60 @@
+* {
+  padding: 0;
+  margin: 0;
+}
+.background-img {
+  background-image: url('../img/shogi-background.jpg');
+  background-color: #cccccc;
+  /* Center and scale the image nicely */
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: -1;
+  display: block;
+  width: 100vw;
+  height: 100vh;
+
+  /* blur effect */
+  -webkit-filter: blur(3px);
+  -moz-filter: blur(3px);
+  -o-filter: blur(3px);
+  -ms-filter: blur(3px);
+  filter: blur(3px);
+}
+main {
+  /* width: 100vw;*/
+  height: 100vh;
+  text-align: center;
+  z-index: 1;
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
+}
+
+.title-shogi-wrapper {
+  padding: 25px;
+}
+.title-shogi-wrapper > .title-shogi {
+  font-size: 50px;
+  color: white;
+}
+
+.content-wrapper {
+  padding: 20px;
+  width: 50%;
+  margin: auto;
+}
+.content-wrapper > .content-wrapper-title {
+  padding: 10px;
+  font-size: 20px;
+  color: white;
+}
+
+.divider {
+  border-top: 4px solid #2f2f2fd4;
+  margin-top: 12px;
+  margin-bottom: 12px;
+}

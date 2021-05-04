@@ -12,10 +12,30 @@ class Room{
         return this.users.length == 0;
     }
 
-    addUser (id, name, room) {
-        var user = new User(id, name, room);
+    whoseTurn () {
+        for (var i = 0; i < this.users.length; i++){
+            if (this.users[i].myMove){
+                return i;
+            }
+        }
+        return -99;
+    }
+
+    changeTurn () {
+        var index = this.whoseTurn();
+        this.users[index].myMove = false;
+        var newIndex = index + 1;
+        if (newIndex >= this.users.length) {
+            newIndex = 0;
+        }
+        this.users[newIndex].myMove = true;
+    }
+
+    addUser (user) {
+        if (this.users.length == 0) {
+            user.setMyMove(true);
+        }
         this.users.push(user);
-        return user;
     }
 
     removeUser (id) {

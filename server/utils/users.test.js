@@ -1,6 +1,6 @@
 const expect = require('expect');
 
-const {Users} = require('./users');
+const {Users,User} = require('./users');
 
 describe('Users', () => {
 
@@ -23,12 +23,8 @@ describe('Users', () => {
 
     it('should add new user', () => {
         var users = new Users();
-        var user = {
-            id: '123',
-            name: 'Andrew',
-            room: 'The Office fans'
-        };
-        var resUser = users.addUser(user.id, user.name, user.room);
+        var user = new User('123','Andrew','The Office fans');
+        users.addUser(user.id, user.name, user.room);
 
         expect(users.users).toEqual([user]);
     });

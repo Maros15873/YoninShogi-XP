@@ -72,7 +72,7 @@ socket.on('updateRoomList', function (rooms) {
     } 
     
     rooms.forEach(function (room) {
-        ol.append(jQuery('<button name="btn" value="'+room.name+'"></button>').text(room.name));         
+        ol.append(jQuery('<button name="btn" value="'+room.name+'"></button>').text(room.name+" ("+room.users.length+"/4)"));         
     });
 
     jQuery('#rooms').html(ol);
@@ -118,6 +118,35 @@ jQuery('#message-form').on('submit', function (e) {
         messageTextbox.val('');
     });
 });
+
+//--------------------------------------------------------------------------------------------//
+
+var canvas = document.getElementById("hracia_plocha");
+var ctx = canvas.getContext("2d");
+ctx.fillStyle = "#FFFFFF";
+
+canvas.width = 900;
+canvas.height = 900;
+
+
+function getMousePosition(canvas, event) {
+    let rect = canvas.getBoundingClientRect();
+    let x = event.clientX - rect.left;
+    let y = event.clientY - rect.top;
+    console.log("Coordinate x: " + x, 
+                "Coordinate y: " + y);
+    socket.emit('clickEvent', "Coordinate x: " + x + ", Coordinate y: " + y);
+}
+  
+canvas.addEventListener("mousedown", function(e)
+{
+    getMousePosition(canvas, e);
+});
+
+socket.on('click', function (message) {
+    console.log(message);
+});
+
 
 
 

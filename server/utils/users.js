@@ -3,6 +3,11 @@ class User{
         this.id = id;
         this.name = name;
         this.room = room;
+        this.myMove = false;
+    }
+
+    setMyMove (bool) {
+        this.myMove = bool;
     }
 }
 
@@ -15,8 +20,7 @@ class Users {
         return this.users.length == 0;
     }
 
-    addUser (id, name, room) {
-        var user = new User(id, name, room);
+    addUser (user) {
         this.users.push(user);
         return user;
     }

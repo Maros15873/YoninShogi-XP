@@ -42,14 +42,14 @@ io.on('connection',(socket) => {
         users.removeUser(socket.id);
 
         var user = new User(socket.id, params.name, params.room);
-        users.addUser(user.id, user.name, user.room);
+        users.addUser(user);
 
         var room = rooms.getRoom(user.room);
         if (room) {
-            room.addUser(user.id, user.name, user.room);
+            room.addUser(user);
         } else {
             var room = rooms.addRoom(user.room, user.room); //!!!! user room id sa zatial neriesi
-            room.addUser(user.id, user.name, user.room);
+            room.addUser(user);
         }
 
         io.to(params.room).emit('updateUserList', users.getUserList(params.room));
@@ -60,7 +60,15 @@ io.on('connection',(socket) => {
         callback();
     });
 
+    socket.on('clickEvent', (message) => {
+        var user = users.getUser(socket.id);
+        var room = rooms.getRoom(user.room);
 
+        if (user && user.myMove) {
+            room.changeTurn();
+            io.to(user.room).emit('click',user.name + ": "+ message);
+        }
+    });
 
     socket.on('createMessage', (message, callback) => {
         var user = users.getUser(socket.id);
