@@ -60,13 +60,21 @@ io.on('connection',(socket) => {
         callback();
     });
 
-    socket.on('clickEvent', (message) => {
+    socket.on('playerIdEvent', () => {
         var user = users.getUser(socket.id);
-        var room = rooms.getRoom(user.room);
+
+        if (user) {
+            io.to(socket.id).emit('playerId',user.playerNumber);
+        }
+    });
+
+    socket.on('clickEvent', (position,playerN) => {
+        var user = users.getUser(socket.id);
 
         if (user && user.myMove) {
+            var room = rooms.getRoom(user.room);
             room.changeTurn();
-            io.to(user.room).emit('click',user.name + ": "+ message);
+            io.to(user.room).emit('click',position,playerN);
         }
     });
 

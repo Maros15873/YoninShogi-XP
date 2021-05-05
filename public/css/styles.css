@@ -39,3 +39,9 @@ button:disabled{cursor:default;background:#698ea5}
     margin:10px 20px;
     text-align:left
 }
+
+canvas{
+    width: 100%;
+    height:100%;
+    position: relative;
+  }

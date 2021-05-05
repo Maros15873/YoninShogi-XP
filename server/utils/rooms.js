@@ -35,7 +35,14 @@ class Room{
         if (this.users.length == 0) {
             user.setMyMove(true);
         }
+        user.setPlayerNumber(this.users.length);
         this.users.push(user);
+    }
+
+    reassignAllPlayerNumbers () {
+        for (var i = 0; i < this.users.length; i++){
+            this.users[i].setPlayerNumber(i);
+        }
     }
 
     removeUser (id) {

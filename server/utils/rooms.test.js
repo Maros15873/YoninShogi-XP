@@ -109,5 +109,39 @@ describe('Changing turn', () => {
 
         expect([user1.myMove,user2.myMove]).toEqual([true,false]);
     });
+});
+
+
+describe('Player Numbers', () => {
+
+    it('first player is number 0', () => {
+        var room = new Room('C#123','C');
+        var user = new User('id1','Jozko','C#123');
+        room.addUser(user);
+
+        expect(user.playerNumber).toEqual(0);
+    });
+
+    it('two players player number', () => {
+        var room = new Room('C#123','C');
+        var user1 = new User('id1','Jozko','C#123');
+        var user2 = new User('id2','Dezko','C#123');
+        room.addUser(user1);
+        room.addUser(user2);
+
+        expect([user1.playerNumber,user2.playerNumber]).toEqual([0,1]);
+    });
+
+    it('delete from users player number', () => {
+        var room = new Room('C#123','C');
+        var user1 = new User('id1','Jozko','C#123');
+        var user2 = new User('id2','Dezko','C#123');
+        room.addUser(user1);
+        room.addUser(user2);
+        room.removeUser('id1');
+        room.reassignAllPlayerNumbers();
+
+        expect(room.users[0].playerNumber).toEqual(0);
+    });
 
 });

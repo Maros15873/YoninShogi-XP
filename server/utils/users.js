@@ -4,10 +4,15 @@ class User{
         this.name = name;
         this.room = room;
         this.myMove = false;
+        this.playerNumber = null;
     }
 
     setMyMove (bool) {
         this.myMove = bool;
+    }
+
+    setPlayerNumber (n) {
+        this.playerNumber = n;
     }
 }
 
