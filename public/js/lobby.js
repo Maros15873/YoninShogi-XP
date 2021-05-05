@@ -178,7 +178,7 @@ socket.on('click', function (position,id) { //INFORMACIA PRE VSETKYCH O USPESNE 
 
 function getRealPosition(position, id) {
     var matrix = MATRIX;
-    for (var i = 0; i < (Math.abs(id - PLAYER_ID)); i++){
+    for (var i = 0; i < (Math.abs(4 - (id - PLAYER_ID))); i++){
         matrix = transpose(matrix);
     }
 
