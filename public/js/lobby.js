@@ -159,7 +159,9 @@ function getMousePosition(canvas, event) {
     if (position != null && position[0] != null && position[1] != null) {
         if (board.squares[position[0]][position[1]].piece != null && board.squares[position[0]][position[1]].piece.playerId == PLAYER_ID){ 
             if (board.squares[position[0]][position[1]].piece.isValidMove(position[2],position[3])){   
-                socket.emit('clickEvent', position, PLAYER_ID); // POSIELAM NA SERVER ZE SOM VYKONAL TAH (TENTO TAH JE UZ PO VSETKYCH KONTROLACH)!
+                if (myIncludes(board.squares[position[0]][position[1]].piece.listOfMoves(), [position[2],position[3]])) {
+                    socket.emit('clickEvent', position, PLAYER_ID); // POSIELAM NA SERVER ZE SOM VYKONAL TAH (TENTO TAH JE UZ PO VSETKYCH KONTROLACH)!
+                }              
             }
         }
     }
@@ -177,30 +179,34 @@ socket.on('click', function (position,id) { //INFORMACIA PRE VSETKYCH O USPESNE 
 });
 
 function getRealPosition(position, id) {
-    var matrix = MATRIX;
-    for (var i = 0; i < (Math.abs(4 - (id - PLAYER_ID))); i++){
-        matrix = transpose(matrix);
-    }
 
-    console.log(position);
-    console.log(id,PLAYER_ID);
-    console.log(matrix);
+    var matrix = MATRIX;
+    for (var i = 0; i < (Math.abs(id - PLAYER_ID)); i++){
+        if (id < PLAYER_ID){
+            matrix = transpose(matrix,true);
+        } else {
+            matrix = transpose(matrix,false);
+        }
+        
+    }
 
     var from = matrix[position[0]][position[1]];
     var to = matrix[position[2]][position[3]];
-
-    console.log(from[0],from[1],to[0],to[1]);
 
     return [from[0],from[1],to[0],to[1]];
 
 }
 
-function transpose(matrix) {
+function transpose(matrix,forth=true) {
     let arr=[];
         for(let i=0;i<matrix.length;i++){
             arr.push([]);
             for(let j=0;j<matrix.length;j++){
-                arr[i].push(matrix[matrix.length-1-j][i]);
+                if (forth == true){
+                    arr[i].push(matrix[j][matrix.length-1-i]);
+                } else {
+                    arr[i].push(matrix[matrix.length-1-j][i]);
+                }
             }
         }
     return arr
@@ -246,6 +252,9 @@ class Board{
 
         if (selectedPiece != null) {
             selectedPiece.update();
+            if (selectedPiece.piece != null){
+                selectedPiece.piece.hideMyMoves();
+            }
             col = selectedPiece.column;
             row = selectedPiece.row;
         }
@@ -261,6 +270,7 @@ class Board{
             
             if (PLAYER_ID == this.squares[x][y].piece.playerId){
                 selectedPiece.highlight();
+                selectedPiece.piece.showMyMoves();
             }
         }
 
@@ -286,9 +296,8 @@ class Square{
 
     addPiece(type,player_id,deg){
         var dir = "img/shogi-set-01/";
-        if (type == "king"){
-            this.piece = new Piece(player_id,this.x+5, this.y+5,this.column, this.row, dir + "king.gif",deg);
-        } 
+        var file = ".gif"
+        this.piece = new Piece(player_id,this.x+5, this.y+5,this.column, this.row, dir + type + file,deg,type);
     }
 
     highlight(){
@@ -310,10 +319,11 @@ class Square{
 
 class Piece{
 
-    constructor(playerId,x,y,col,row,src,deg){
+    constructor(playerId,x,y,col,row,src,deg,type){
         this.playerId = playerId;
         this.x = x;
         this.y = y;
+        this.type = type;
         this.img = new Image();
         this.img.src = src;
         this.deg = deg;
@@ -322,8 +332,86 @@ class Piece{
         this.img.onload = () => {
             this.showImage();
         }
-        this.moves = [[0,1],[0,-1],[1,0],[-1,0],[-1,-1],[1,1],[1,-1],[-1,1]];
-        this.type = "king";
+        this.promoted = false;
+        this.moves = this.assignMoves();
+    }
+
+    assignMoves(){
+        if (this.type == "king") {
+            return [[0,1],[0,-1],[1,0],[-1,0],[-1,-1],[1,1],[1,-1],[-1,1]];
+        } else if (this.type == "rook") {
+
+            if (this.promoted == true){
+                return [[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[0,7],[0,8],
+                        [0,-1],[0,-2],[0,-3],[0,-4],[0,-5],[0,-6],[0,-7],[0,-8],
+                        [1,0],[2,0],[3,0],[4,0],[5,0],[6,0],[7,0],[8,0],
+                        [-1,0],[-2,0],[-3,0],[-4,0],[-5,0],[-6,0],[-7,0],[-8,0]].concat([[0,1],[0,-1],[1,0],[-1,0],[-1,-1],[1,1],[1,-1],[-1,1]]);
+            } else {
+                return [[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[0,7],[0,8],
+                        [0,-1],[0,-2],[0,-3],[0,-4],[0,-5],[0,-6],[0,-7],[0,-8],
+                        [1,0],[2,0],[3,0],[4,0],[5,0],[6,0],[7,0],[8,0],
+                        [-1,0],[-2,0],[-3,0],[-4,0],[-5,0],[-6,0],[-7,0],[-8,0]];
+            }
+
+        } else if (this.type == "pawn") {
+
+            if (this.promoted == true){
+                if (this.deg == 0){
+                    return [[0,-1],[0,1],[-1,0],[1,0],[-1,-1],[1,-1]];
+                } else if (this.deg == 90) {
+                    return [[0,-1],[0,1],[-1,0],[1,0],[-1,-1],[-1,1]];
+                } else if (this.deg == 180){
+                    return [[0,-1],[0,1],[-1,0],[1,0],[1,1],[-1,1]];
+                } else if (this.deg == -90){
+                    return [[0,-1],[0,1],[-1,0],[1,0],[1,1],[1,-1]];
+                }         
+            } else {
+                if (this.deg == 0){
+                    return [[0,-1]];
+                } else if (this.deg == 90) {
+                    return [[-1,0]];
+                } else if (this.deg == 180){
+                    return [[0,1]];
+                } else if (this.deg == -90){
+                    return [[1,0]];
+                }              
+            }
+
+        } else if (this.type == "silver") {
+
+            if (this.promoted == true){
+                if (this.deg == 0){
+                    return [[0,-1],[0,1],[-1,0],[1,0],[-1,-1],[1,-1]];
+                } else if (this.deg == 90) {
+                    return [[0,-1],[0,1],[-1,0],[1,0],[-1,-1],[-1,1]];
+                } else if (this.deg == 180){
+                    return [[0,-1],[0,1],[-1,0],[1,0],[1,1],[-1,1]];
+                } else if (this.deg == -90){
+                    return [[0,-1],[0,1],[-1,0],[1,0],[1,1],[1,-1]];
+                }          
+            } else {
+                if (this.deg == 0){
+                    return [[0,-1],[1,1],[-1,-1],[-1,1],[1,-1]];
+                } else if (this.deg == 90) {
+                    return [[-1,0],[1,1],[-1,-1],[-1,1],[1,-1]];
+                } else if (this.deg == 180){
+                    return [[0,1],[1,1],[-1,-1],[-1,1],[1,-1]];
+                } else if (this.deg == -90){
+                    return [[1,0],[1,1],[-1,-1],[-1,1],[1,-1]];
+                }      
+            }
+
+        } else if (this.type == "gold") {
+            if (this.deg == 0){
+                return [[0,-1],[0,1],[-1,0],[1,0],[-1,-1],[1,-1]];
+            } else if (this.deg == 90) {
+                return [[0,-1],[0,1],[-1,0],[1,0],[-1,-1],[-1,1]];
+            } else if (this.deg == 180){
+                return [[0,-1],[0,1],[-1,0],[1,0],[1,1],[-1,1]];
+            } else if (this.deg == -90){
+                return [[0,-1],[0,1],[-1,0],[1,0],[1,1],[1,-1]];
+            }      
+        }
     }
 
     update(){
@@ -352,19 +440,56 @@ class Piece{
         
     }
 
+    showMyMoves() {
+        var list = this.listOfMoves();
+        for (var i = 0; i < list.length; i++){
+            board.squares[list[i][0]][list[i][1]].highlight();
+        }
+    }
+
+    hideMyMoves() {
+        var list = this.listOfMoves();
+        for (var i = 0; i < list.length; i++){
+            board.squares[list[i][0]][list[i][1]].update();
+        }
+    }
+
+    listOfMoves() {
+        var list = [];
+        for (var i = 0; i < this.moves.length; i++){
+            var moveCol = this.column + this.moves[i][0];
+            var moveRow = this.row + this.moves[i][1];
+            if (this.isValidMove(moveCol, moveRow)) {
+                if (this.type == "rook" && ((this.moves[i][0] == 0 && (Math.abs(this.moves[i][1]) != 1)) || (this.moves[i][1] == 0 && Math.abs(this.moves[i][0]) != 1))) {
+                    if ((myIncludes(list, [moveCol + 1, moveRow]) && (board.squares[moveCol + 1][moveRow].piece == null)) || 
+                        (myIncludes(list, [moveCol - 1, moveRow]) && (board.squares[moveCol - 1][moveRow].piece == null)) || 
+                        (myIncludes(list, [moveCol, moveRow + 1]) && (board.squares[moveCol][moveRow + 1].piece == null)) || 
+                        (myIncludes(list, [moveCol, moveRow - 1]) && (board.squares[moveCol][moveRow - 1].piece == null))
+                        ) {
+                        list.push([moveCol, moveRow]);
+                    }
+                } else {
+                    list.push([moveCol, moveRow]);
+                }            
+            }
+        }
+        return list;
+    }
+
     isValidMove(column, row){
+
+        if (!(column >= 0 && column <= 8 && row >= 0 && row <= 8)){
+            return false;
+        }
 
         if (board.squares[column][row].piece != null && board.squares[column][row].piece.playerId == this.playerId) {
             return false;
         }
 
-        if (!(column >= 0 && column <= 8 && row >= 0 && row <= 8)){
-            return false;
-        }
         var move = [column-this.column,row - this.row];
 
         for (var i = 0; i < this.moves.length; i++){
-            if (this.compare(this.moves[i], move)) {
+            if (compare(this.moves[i], move)) {
                 return true;
             }
         }
@@ -372,25 +497,52 @@ class Piece{
         
     }
 
-    compare(a,b){
-        return a.toString() == b.toString();
-    }
-
 }
 
+function compare(a,b){
+    return a.toString() == b.toString();
+}
 
+function myIncludes(array, element) {
+    for (var i = 0; i < array.length; i++){
+        if (compare(array[i],element)){
+            return true;
+        }
+    }
+    return false;
+}
 
 var board = new Board(180,180,540);
 var PLAYER_ID = null;
 
+var starting_positions = new Map();
+starting_positions.set(0, {king: [[4,8]], pawn: [[3,7],[5,7],[4,6]], silver: [[2,8],[6,8]], gold: [[3,8],[5,8]], rook: [[4,7]]});
+starting_positions.set(1, {king: [[0,4]], pawn: [[2,4],[1,3],[1,5]], silver: [[0,2],[0,6]], gold: [[0,3],[0,5]], rook: [[1,4]]});
+starting_positions.set(2, {king: [[4,0]], pawn: [[4,2],[5,1],[3,1]], silver: [[2,0],[6,0]], gold: [[3,0],[5,0]], rook: [[4,1]]});
+starting_positions.set(3, {king: [[8,4]], pawn: [[7,3],[7,5],[6,4]], silver: [[8,2],[8,6]], gold: [[8,3],[8,5]], rook: [[7,4]]});
+
 socket.on('playerId', function (id) {
     PLAYER_ID = id;
-    var pole = [[4,8],[0,4],[4,0],[8,4]];
     var deg = [0,90,180,-90];
     console.log(id);
     var tmpId = id;
-    for (var i = 0; i < 4; i++){
-        board.squares[pole[i][0]][pole[i][1]].addPiece("king",tmpId,deg[i]);
+
+    for (var i = 0; i < 4; i ++){
+        var obj = starting_positions.get(i);
+        board.squares[obj.king[0][0]][obj.king[0][1]].addPiece("king",tmpId,deg[i]);
+        for (var j = 0; j < obj.pawn.length; j++){
+            board.squares[obj.pawn[j][0]][obj.pawn[j][1]].addPiece("pawn",tmpId,deg[i]);
+        }
+        for (var j = 0; j < obj.silver.length; j++){
+            board.squares[obj.silver[j][0]][obj.silver[j][1]].addPiece("silver",tmpId,deg[i]);
+        }
+        for (var j = 0; j < obj.gold.length; j++){
+            board.squares[obj.gold[j][0]][obj.gold[j][1]].addPiece("gold",tmpId,deg[i]);
+        }
+        for (var j = 0; j < obj.rook.length; j++){
+            board.squares[obj.rook[j][0]][obj.rook[j][1]].addPiece("rook",tmpId,deg[i]);
+        }
+
         tmpId += 1;
         if (tmpId > 3) {
             tmpId = 0;
