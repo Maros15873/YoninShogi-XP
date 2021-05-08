@@ -135,6 +135,7 @@ const WIDTH = 900;
 const HEIGHT = 900;
 
 var selectedPiece = null;
+var selectedPrisoner = null;
 const MATRIX = generatePositions();
 
 function generatePositions(){
@@ -154,16 +155,37 @@ function getMousePosition(canvas, event) {
     let y = event.clientY - rect.top;
     console.log("Coordinate x: " + x, 
                 "Coordinate y: " + y);
-    var position = board.getSquareByCoord(x,y);
 
-    if (position != null && position[0] != null && position[1] != null) {
-        if (board.squares[position[0]][position[1]].piece != null && board.squares[position[0]][position[1]].piece.playerId == PLAYER_ID){ 
-            if (board.squares[position[0]][position[1]].piece.isValidMove(position[2],position[3])){   
-                if (myIncludes(board.squares[position[0]][position[1]].piece.listOfMoves(), [position[2],position[3]])) {
-                    socket.emit('clickEvent', position, PLAYER_ID); // POSIELAM NA SERVER ZE SOM VYKONAL TAH (TENTO TAH JE UZ PO VSETKYCH KONTROLACH)!
-                }              
+    var position_prisoner = plate.clickPrisoner(x,y);
+
+    if (position_prisoner != null){
+        if (position_prisoner.number > 0){
+            selectedPrisoner = position_prisoner;
+            position_prisoner.obj.highlight();
+            position_prisoner.showMyMoves();
+        }  
+  
+    } else {
+
+        var position = board.getSquareByCoord(x,y);
+
+        if (selectedPrisoner != null && position != null && position[0] == null) {
+            socket.emit('clickEvent', position, PLAYER_ID); // POSIELAM NA SERVER ZE SOM VYKONAL TAH (TENTO TAH JE UZ PO VSETKYCH KONTROLACH)! [DOKLADANIM]
+        }
+
+        if (position != null && position[0] != null && position[1] != null) {
+            if (board.squares[position[0]][position[1]].piece != null && board.squares[position[0]][position[1]].piece.playerId == PLAYER_ID){ 
+                if (board.squares[position[0]][position[1]].piece.isValidMove(position[2],position[3])){   
+                    if (myIncludes(board.squares[position[0]][position[1]].piece.listOfMoves(), [position[2],position[3]])) {
+                        if (board.squares[position[2]][position[3]].piece != null){
+                            plate.addPrisoner(board.squares[position[2]][position[3]].piece.type);
+                        }
+                        socket.emit('clickEvent', position, PLAYER_ID); // POSIELAM NA SERVER ZE SOM VYKONAL TAH (TENTO TAH JE UZ PO VSETKYCH KONTROLACH)!
+                    }              
+                }
             }
         }
+
     }
 
 }
@@ -175,7 +197,17 @@ canvas.addEventListener("mousedown", function(e)
 
 socket.on('click', function (position,id) { //INFORMACIA PRE VSETKYCH O USPESNE VYKONANOM TAHU!
     var new_position = getRealPosition(position, id);
-    board.squares[new_position[0]][new_position[1]].piece.makeMove(new_position[2],new_position[3]);
+    if (new_position[0] == null){
+        board.squares[new_position[2]][new_position[3]].addPiece(new_position[1], id, getDegById(id));  
+        board.squares[new_position[2]][new_position[3]].update();
+        
+        if (PLAYER_ID == id) {
+            selectedPrisoner.removePrisoner();
+        }
+        
+    } else {
+        board.squares[new_position[0]][new_position[1]].piece.makeMove(new_position[2],new_position[3]);
+    }
 });
 
 function getRealPosition(position, id) {
@@ -190,7 +222,11 @@ function getRealPosition(position, id) {
         
     }
 
-    var from = matrix[position[0]][position[1]];
+    if (position[0] == null){
+        var from = [null,position[1]];
+    } else {
+        var from = matrix[position[0]][position[1]];
+    }
     var to = matrix[position[2]][position[3]];
 
     return [from[0],from[1],to[0],to[1]];
@@ -210,6 +246,134 @@ function transpose(matrix,forth=true) {
             }
         }
     return arr
+}
+
+class Plate{
+
+    constructor(x,y,width,height,playerId) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.playerId = playerId;
+        this.sqareSize = 60;
+
+        ctx.lineWidth = 2;
+        this.obj = ctx.strokeRect(this.x, this.y, this.width, this.height);
+        this.prisoners = this.fillPrisoners(this.x + 130, this.y + 80, this.sqareSize);
+    }
+
+    clickPrisoner(x,y) {
+        for (var i = 0; i < 4; i++) {
+            if ((x >= this.prisoners[i].x) && (x <= (this.prisoners[i].x + this.sqareSize)) && (y >= this.prisoners[i].y) && (y <= (this.prisoners[i].y + this.sqareSize))){
+                return this.prisoners[i];
+            }
+        }
+        return null;
+    }
+
+    fillPrisoners(x,y,squareSize) {
+        var names = ["pawn","silver","gold","rook"];
+        var matrix = Array(4).fill();
+        for (var i = 0; i < 4; i++) {
+            matrix[i] = new Prisoner(x,y,squareSize,names[i],this.playerId);
+            x = x + 70;
+        }
+        return matrix;
+    }
+
+    addPrisoner(type){
+        if (type == "pawn") {
+            this.prisoners[0].addPrisoner();
+        } else if (type == "silver") {
+            this.prisoners[1].addPrisoner();
+        } else if (type == "gold") {
+            this.prisoners[2].addPrisoner();
+        } else if (type == "rook") {
+            this.prisoners[3].addPrisoner();
+        }   
+    }
+    
+    removePrisoner(type){
+        if (type == "pawn") {
+            this.prisoners[0].removePrisoner();
+        } else if (type == "silver") {
+            this.prisoners[1].removePrisoner();
+        } else if (type == "gold") {
+            this.prisoners[2].removePrisoner();
+        } else if (type == "rook") {
+            this.prisoners[3].removePrisoner();
+        }   
+    }
+
+}
+
+class Prisoner{
+
+    constructor(x,y, squareSize, name,playerId){
+        this.x = x;
+        this.y = y;
+        this.sqareSize = squareSize;
+        this.name = name;
+        this.number = 0;
+        this.playerId = playerId;
+        this.obj = new Square(this.x, this.y, null, null, this.sqareSize);
+        this.objName = ctx.fillText(this.name, this.x, this.y-10);
+        this.objNumber = ctx.fillText(this.number, this.x, this.y+70);
+    }
+
+    showMyMoves() {
+        var list = this.listOfMoves();
+        for (var i = 0; i < list.length; i++){
+            board.squares[list[i][0]][list[i][1]].highlight();
+        }
+    }
+
+    hideMyMoves() {
+        var list = this.listOfMoves();
+        for (var i = 0; i < list.length; i++){
+            board.squares[list[i][0]][list[i][1]].update();
+        }
+    }
+
+    listOfMoves() {
+        var list = [];
+        for (var i = 0; i < 9; i++){
+            for (var j = 0; j < 9; j++){
+                if(board.squares[i][j].piece == null){
+                    list.push([i,j]);
+                }
+            }
+        }
+        return list;
+    }
+
+    update(){
+        
+        ctx.fillStyle = "white";
+        ctx.fillRect(this.x-5, this.y-20, this.sqareSize+10, this.sqareSize+40);//premazanie
+        ctx.fillStyle = "black";
+
+        this.obj = new Square(this.x, this.y, null, null, this.sqareSize);
+        this.objName = ctx.fillText(this.name, this.x, this.y-10);
+        this.objNumber =  ctx.fillText(this.number, this.x, this.y+70);
+
+        if (this.number > 0) {
+            this.obj.addPiece(this.name,this.playerId,0);
+        }
+    }
+
+    addPrisoner(){
+        this.number += 1;
+        this.update();
+    }
+
+    removePrisoner(){
+        this.number -= 1;
+        this.update();
+    }
+
+
 }
 
 
@@ -266,9 +430,21 @@ class Board{
             selectedPiece = this.squares[x][y];
         }
 
+        if (selectedPrisoner != null) {
+            selectedPiece.update();
+            selectedPiece = null;
+            selectedPrisoner.obj.update();
+            selectedPrisoner.hideMyMoves();
+            if (myIncludes(selectedPrisoner.listOfMoves(),[x,y])){
+                return [null,selectedPrisoner.name,x,y];
+            } else {
+                selectedPrisoner = null;
+            }
+        }
+
         if (this.squares[x][y].piece != null) {
             
-            if (PLAYER_ID == this.squares[x][y].piece.playerId){
+            if (PLAYER_ID == this.squares[x][y].piece.playerId && selectedPiece != null){
                 selectedPiece.highlight();
                 selectedPiece.piece.showMyMoves();
             }
@@ -513,6 +689,7 @@ function myIncludes(array, element) {
 }
 
 var board = new Board(180,180,540);
+var plate = new Plate(180,180+540,540,180);
 var PLAYER_ID = null;
 
 var starting_positions = new Map();
@@ -550,6 +727,24 @@ socket.on('playerId', function (id) {
     }
     
 });
+
+function getDegById(id) {
+    var deg = [0,90,180,-90];
+    var tmpId = PLAYER_ID;
+
+    for (var i = 0; i < 4; i++){
+        if (tmpId == id) {
+            return deg[i];
+        }
+        tmpId += 1;
+        if (tmpId > 3) {
+            tmpId = 0;
+        }
+    }
+
+    return null;
+    
+}
 
 
 
