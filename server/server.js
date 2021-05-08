@@ -78,6 +78,14 @@ io.on('connection',(socket) => {
         }
     });
 
+    socket.on('promoteEvent', (position,id) => {
+        var user = users.getUser(socket.id);
+
+        if (user) {
+            io.to(user.room).emit('promote',position,id);
+        }
+    });
+
     socket.on('createMessage', (message, callback) => {
         var user = users.getUser(socket.id);
 

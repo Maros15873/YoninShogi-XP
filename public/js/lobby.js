@@ -125,11 +125,14 @@ jQuery('#message-form').on('submit', function (e) {
 //--------------------------------------------------------------------------------------------//
 
 var canvas = document.getElementById("hracia_plocha");
-var ctx = canvas.getContext("2d");
-ctx.fillStyle = "#FFFFFF";
+if (canvas != null){
+    var ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#FFFFFF";
 
-canvas.width = 900;
-canvas.height = 900;
+    canvas.width = 900;
+    canvas.height = 900;
+}
+
 
 const WIDTH = 900;
 const HEIGHT = 900;
@@ -190,10 +193,13 @@ function getMousePosition(canvas, event) {
 
 }
   
-canvas.addEventListener("mousedown", function(e)
-{
-    getMousePosition(canvas, e);
-});
+if (canvas != null){
+    canvas.addEventListener("mousedown", function(e)
+    {
+        getMousePosition(canvas, e);
+    });
+}
+
 
 socket.on('click', function (position,id) { //INFORMACIA PRE VSETKYCH O USPESNE VYKONANOM TAHU!
     var new_position = getRealPosition(position, id);
@@ -206,9 +212,58 @@ socket.on('click', function (position,id) { //INFORMACIA PRE VSETKYCH O USPESNE 
         }
         
     } else {
-        board.squares[new_position[0]][new_position[1]].piece.makeMove(new_position[2],new_position[3]);
+        var answer = false;
+
+        if (PLAYER_ID == id && board.squares[new_position[0]][new_position[1]].piece.promoted == false &&
+            (board.squares[position[0]][position[1]].isInPromotionZone() || board.squares[position[2]][position[3]].isInPromotionZone())){
+            answer = confirm("Promote?");
+        }
+
+        if (answer){
+            socket.emit('promoteEvent', position, id);
+        } else {
+            board.squares[new_position[0]][new_position[1]].piece.makeMove(new_position[2],new_position[3],false);
+        }
+
     }
 });
+
+socket.on('promote', function (position, id){
+    var new_position = getRealPosition(position, id);
+    if (PLAYER_ID == id) {
+        board.squares[new_position[0]][new_position[1]].piece.makeMove(new_position[2],new_position[3],true);
+    } else {
+        board.squares[new_position[2]][new_position[3]].piece.makePromotion();
+    }
+    
+});
+
+function getRealCoords(coords, id) { // AK NECHCEM TAHY ZADAVAT EXPLICITNE ALE ICH POCITAT [Piece(), assignMoves()]
+
+    var matrix = [[[-1,-1],[-1,0],[-1,1]],
+                  [[0,-1],[0,0],[0,1]],
+                  [[1,-1],[1,0],[1,1]]];
+
+    var new_coords = [];
+
+    for (var i = 0; i < 3; i++){
+        for (var j = 0; j < 3; j++){
+            if (myIncludes([matrix[i][j]], coords)){
+                new_coords = [i,j];             
+            } 
+        }
+    }
+
+    for (var i = 0; i < (Math.abs(id - PLAYER_ID)); i++){
+        if (id < PLAYER_ID){
+            matrix = transpose(matrix,false);
+        } else {
+            matrix = transpose(matrix,true);
+        } 
+    }
+    
+    return matrix[new_coords[0]][new_coords[1]];
+}
 
 function getRealPosition(position, id) {
 
@@ -470,10 +525,16 @@ class Square{
         this.piece = null;
     }
 
-    addPiece(type,player_id,deg){
+    addPiece(type,player_id,deg,promoted=false){
         var dir = "img/shogi-set-01/";
-        var file = ".gif"
-        this.piece = new Piece(player_id,this.x+5, this.y+5,this.column, this.row, dir + type + file,deg,type);
+        var file = ".gif";
+        if (promoted){
+            this.piece = new Piece(player_id,this.x+5, this.y+5,this.column, this.row, dir + type+"P" + file,deg,type);
+            this.piece.promoted = true;
+        } else {
+            this.piece = new Piece(player_id,this.x+5, this.y+5,this.column, this.row, dir + type + file,deg,type);
+        }
+        
     }
 
     highlight(){
@@ -489,6 +550,13 @@ class Square{
         if (this.piece != null) {
             this.piece.update();
         }
+    }
+
+    isInPromotionZone(){
+        if (this.row < 3){
+            return true;
+        }
+        return false;
     }
 
 }
@@ -510,6 +578,14 @@ class Piece{
         }
         this.promoted = false;
         this.moves = this.assignMoves();
+    }
+
+    makePromotion(){
+        this.promoted = true;
+        var dir = "img/shogi-set-01/";
+        var file = ".gif"
+        this.img.src = dir + this.type + "P" + file;
+        this.update();
     }
 
     assignMoves(){
@@ -535,21 +611,21 @@ class Piece{
                 if (this.deg == 0){
                     return [[0,-1],[0,1],[-1,0],[1,0],[-1,-1],[1,-1]];
                 } else if (this.deg == 90) {
-                    return [[0,-1],[0,1],[-1,0],[1,0],[-1,-1],[-1,1]];
+                    return [[0,-1],[0,1],[-1,0],[1,0],[1,1],[1,-1]];
                 } else if (this.deg == 180){
                     return [[0,-1],[0,1],[-1,0],[1,0],[1,1],[-1,1]];
                 } else if (this.deg == -90){
-                    return [[0,-1],[0,1],[-1,0],[1,0],[1,1],[1,-1]];
+                    return [[0,-1],[0,1],[-1,0],[1,0],[-1,-1],[-1,1]];
                 }         
             } else {
                 if (this.deg == 0){
                     return [[0,-1]];
                 } else if (this.deg == 90) {
-                    return [[-1,0]];
+                    return [[1,0]];
                 } else if (this.deg == 180){
                     return [[0,1]];
                 } else if (this.deg == -90){
-                    return [[1,0]];
+                    return [[-1,0]];
                 }              
             }
 
@@ -559,21 +635,21 @@ class Piece{
                 if (this.deg == 0){
                     return [[0,-1],[0,1],[-1,0],[1,0],[-1,-1],[1,-1]];
                 } else if (this.deg == 90) {
-                    return [[0,-1],[0,1],[-1,0],[1,0],[-1,-1],[-1,1]];
+                    return [[0,-1],[0,1],[-1,0],[1,0],[1,1],[1,-1]];
                 } else if (this.deg == 180){
                     return [[0,-1],[0,1],[-1,0],[1,0],[1,1],[-1,1]];
                 } else if (this.deg == -90){
-                    return [[0,-1],[0,1],[-1,0],[1,0],[1,1],[1,-1]];
+                    return [[0,-1],[0,1],[-1,0],[1,0],[-1,-1],[-1,1]];
                 }          
             } else {
                 if (this.deg == 0){
                     return [[0,-1],[1,1],[-1,-1],[-1,1],[1,-1]];
                 } else if (this.deg == 90) {
-                    return [[-1,0],[1,1],[-1,-1],[-1,1],[1,-1]];
+                    return [[1,0],[1,1],[-1,-1],[-1,1],[1,-1]];
                 } else if (this.deg == 180){
                     return [[0,1],[1,1],[-1,-1],[-1,1],[1,-1]];
                 } else if (this.deg == -90){
-                    return [[1,0],[1,1],[-1,-1],[-1,1],[1,-1]];
+                    return [[-1,0],[1,1],[-1,-1],[-1,1],[1,-1]];
                 }      
             }
 
@@ -581,11 +657,11 @@ class Piece{
             if (this.deg == 0){
                 return [[0,-1],[0,1],[-1,0],[1,0],[-1,-1],[1,-1]];
             } else if (this.deg == 90) {
-                return [[0,-1],[0,1],[-1,0],[1,0],[-1,-1],[-1,1]];
+                return [[0,-1],[0,1],[-1,0],[1,0],[1,1],[1,-1]];
             } else if (this.deg == 180){
                 return [[0,-1],[0,1],[-1,0],[1,0],[1,1],[-1,1]];
             } else if (this.deg == -90){
-                return [[0,-1],[0,1],[-1,0],[1,0],[1,1],[1,-1]];
+                return [[0,-1],[0,1],[-1,0],[1,0],[-1,-1],[-1,1]];
             }      
         }
     }
@@ -603,12 +679,12 @@ class Piece{
         ctx.restore();
     }
 
-    makeMove(col,row){
+    makeMove(col,row,promotion=false){
 
         var square = board.squares[col][row];
         var fromsquare = board.squares[this.column][this.row];
         
-        square.addPiece(fromsquare.piece.type, fromsquare.piece.playerId, fromsquare.piece.deg);  
+        square.addPiece(fromsquare.piece.type, fromsquare.piece.playerId, fromsquare.piece.deg, promotion);  
         square.update();
 
         fromsquare.piece = null;
@@ -631,8 +707,10 @@ class Piece{
     }
 
     listOfMoves() {
+        this.moves = this.assignMoves();
         var list = [];
         for (var i = 0; i < this.moves.length; i++){
+        
             var moveCol = this.column + this.moves[i][0];
             var moveRow = this.row + this.moves[i][1];
             if (this.isValidMove(moveCol, moveRow)) {
@@ -648,6 +726,7 @@ class Piece{
                     list.push([moveCol, moveRow]);
                 }            
             }
+            
         }
         return list;
     }
@@ -688,15 +767,19 @@ function myIncludes(array, element) {
     return false;
 }
 
-var board = new Board(180,180,540);
-var plate = new Plate(180,180+540,540,180);
-var PLAYER_ID = null;
 
-var starting_positions = new Map();
-starting_positions.set(0, {king: [[4,8]], pawn: [[3,7],[5,7],[4,6]], silver: [[2,8],[6,8]], gold: [[3,8],[5,8]], rook: [[4,7]]});
-starting_positions.set(1, {king: [[0,4]], pawn: [[2,4],[1,3],[1,5]], silver: [[0,2],[0,6]], gold: [[0,3],[0,5]], rook: [[1,4]]});
-starting_positions.set(2, {king: [[4,0]], pawn: [[4,2],[5,1],[3,1]], silver: [[2,0],[6,0]], gold: [[3,0],[5,0]], rook: [[4,1]]});
-starting_positions.set(3, {king: [[8,4]], pawn: [[7,3],[7,5],[6,4]], silver: [[8,2],[8,6]], gold: [[8,3],[8,5]], rook: [[7,4]]});
+if (canvas != null){
+    var board = new Board(180,180,540);
+    var plate = new Plate(180,180+540,540,180);
+    var PLAYER_ID = null;
+    
+    var starting_positions = new Map();
+    starting_positions.set(0, {king: [[4,8]], pawn: [[3,7],[5,7],[4,6]], silver: [[2,8],[6,8]], gold: [[3,8],[5,8]], rook: [[4,7]]});
+    starting_positions.set(1, {king: [[0,4]], pawn: [[2,4],[1,3],[1,5]], silver: [[0,2],[0,6]], gold: [[0,3],[0,5]], rook: [[1,4]]});
+    starting_positions.set(2, {king: [[4,0]], pawn: [[4,2],[5,1],[3,1]], silver: [[2,0],[6,0]], gold: [[3,0],[5,0]], rook: [[4,1]]});
+    starting_positions.set(3, {king: [[8,4]], pawn: [[7,3],[7,5],[6,4]], silver: [[8,2],[8,6]], gold: [[8,3],[8,5]], rook: [[7,4]]});
+}
+
 
 socket.on('playerId', function (id) {
     PLAYER_ID = id;
