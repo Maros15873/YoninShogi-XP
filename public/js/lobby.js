@@ -509,7 +509,7 @@ class Board{
 
         if (selectedPrisoner != null) {
             selectedPiece.update();
-            selectedPiece = null;
+            //selectedPiece = null;
             selectedPrisoner.obj.update();
             selectedPrisoner.hideMyMoves();
             if (myIncludes(selectedPrisoner.listOfMoves(),[x,y])){
