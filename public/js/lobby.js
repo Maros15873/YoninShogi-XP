@@ -180,9 +180,6 @@ function getMousePosition(canvas, event) {
             if (board.squares[position[0]][position[1]].piece != null && board.squares[position[0]][position[1]].piece.playerId == PLAYER_ID){ 
                 if (board.squares[position[0]][position[1]].piece.isValidMove(position[2],position[3])){   
                     if (myIncludes(board.squares[position[0]][position[1]].piece.listOfMoves(), [position[2],position[3]])) {
-                        if (board.squares[position[2]][position[3]].piece != null){
-                            plate.addPrisoner(board.squares[position[2]][position[3]].piece.type);
-                        }
                         socket.emit('clickEvent', position, PLAYER_ID); // POSIELAM NA SERVER ZE SOM VYKONAL TAH (TENTO TAH JE UZ PO VSETKYCH KONTROLACH)!
                     }              
                 }
@@ -214,15 +211,20 @@ socket.on('click', function (position,id) { //INFORMACIA PRE VSETKYCH O USPESNE 
     } else {
         var answer = false;
 
-        if (PLAYER_ID == id && board.squares[new_position[0]][new_position[1]].piece.promoted == false &&
+        if (PLAYER_ID == id && board.squares[new_position[0]][new_position[1]].piece.promoted == false && 
+            (board.squares[new_position[0]][new_position[1]].piece.type != "king" && board.squares[new_position[0]][new_position[1]].piece.type != "gold") &&
             (board.squares[position[0]][position[1]].isInPromotionZone() || board.squares[position[2]][position[3]].isInPromotionZone())){
             answer = confirm("Promote?");
+        }
+
+        if (PLAYER_ID == id && board.squares[new_position[2]][new_position[3]].piece != null){
+            plate.addPrisoner(board.squares[new_position[2]][new_position[3]].piece.type);
         }
 
         if (answer){
             socket.emit('promoteEvent', position, id);
         } else {
-            board.squares[new_position[0]][new_position[1]].piece.makeMove(new_position[2],new_position[3],false);
+            board.squares[new_position[0]][new_position[1]].piece.makeMove(new_position[2],new_position[3]);
         }
 
     }
@@ -231,7 +233,8 @@ socket.on('click', function (position,id) { //INFORMACIA PRE VSETKYCH O USPESNE 
 socket.on('promote', function (position, id){
     var new_position = getRealPosition(position, id);
     if (PLAYER_ID == id) {
-        board.squares[new_position[0]][new_position[1]].piece.makeMove(new_position[2],new_position[3],true);
+        board.squares[new_position[0]][new_position[1]].piece.makeMove(new_position[2],new_position[3]);
+        board.squares[new_position[2]][new_position[3]].piece.makePromotion();
     } else {
         board.squares[new_position[2]][new_position[3]].piece.makePromotion();
     }
@@ -529,8 +532,7 @@ class Square{
         var dir = "img/shogi-set-01/";
         var file = ".gif";
         if (promoted){
-            this.piece = new Piece(player_id,this.x+5, this.y+5,this.column, this.row, dir + type+"P" + file,deg,type);
-            this.piece.promoted = true;
+            this.piece = new Piece(player_id,this.x+5, this.y+5,this.column, this.row, dir + type+"P" + file,deg,type, true);
         } else {
             this.piece = new Piece(player_id,this.x+5, this.y+5,this.column, this.row, dir + type + file,deg,type);
         }
@@ -563,7 +565,7 @@ class Square{
 
 class Piece{
 
-    constructor(playerId,x,y,col,row,src,deg,type){
+    constructor(playerId,x,y,col,row,src,deg,type,promoted=false){
         this.playerId = playerId;
         this.x = x;
         this.y = y;
@@ -576,16 +578,19 @@ class Piece{
         this.img.onload = () => {
             this.showImage();
         }
-        this.promoted = false;
+        this.promoted = promoted;
         this.moves = this.assignMoves();
     }
 
     makePromotion(){
-        this.promoted = true;
-        var dir = "img/shogi-set-01/";
-        var file = ".gif"
-        this.img.src = dir + this.type + "P" + file;
-        this.update();
+        if (this.type != "king" && this.type != "gold"){
+            this.promoted = true;
+            var dir = "img/shogi-set-01/";
+            var file = ".gif"
+            this.img.src = dir + this.type + "P" + file;
+            this.update();
+        }
+        
     }
 
     assignMoves(){
@@ -679,12 +684,12 @@ class Piece{
         ctx.restore();
     }
 
-    makeMove(col,row,promotion=false){
+    makeMove(col,row){
 
         var square = board.squares[col][row];
         var fromsquare = board.squares[this.column][this.row];
         
-        square.addPiece(fromsquare.piece.type, fromsquare.piece.playerId, fromsquare.piece.deg, promotion);  
+        square.addPiece(fromsquare.piece.type, fromsquare.piece.playerId, fromsquare.piece.deg, fromsquare.piece.promoted);  
         square.update();
 
         fromsquare.piece = null;
