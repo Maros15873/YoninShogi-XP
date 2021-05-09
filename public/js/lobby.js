@@ -206,6 +206,7 @@ socket.on('click', function (position,id) { //INFORMACIA PRE VSETKYCH O USPESNE 
         
         if (PLAYER_ID == id) {
             selectedPrisoner.removePrisoner();
+            selectedPrisoner = null;
         }
         
     } else {
@@ -399,7 +400,7 @@ class Prisoner{
         for (var i = 0; i < 9; i++){
             for (var j = 0; j < 9; j++){
                 if(board.squares[i][j].piece == null){
-                    if (this.obj.piece.type == "pawn"){
+                    if (this.obj.piece != null && this.obj.piece.type == "pawn"){
                         if (j > 0 && !this.checkPawnInSameColumn(i)) {
                             list.push([i,j]);
                         }
