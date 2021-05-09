@@ -399,11 +399,30 @@ class Prisoner{
         for (var i = 0; i < 9; i++){
             for (var j = 0; j < 9; j++){
                 if(board.squares[i][j].piece == null){
-                    list.push([i,j]);
+                    if (this.obj.piece.type == "pawn"){
+                        if (j > 0 && !this.checkPawnInSameColumn(i)) {
+                            list.push([i,j]);
+                        }
+
+                    } else {
+                        list.push([i,j]);
+                    }                   
                 }
             }
         }
         return list;
+    }
+
+    checkPawnInSameColumn(col){
+        for (var i = 0; i < 9; i++){
+            var piece = board.squares[col][i].piece;
+            if (piece != null){
+                if (piece.type == "pawn" && piece.promoted == false && piece.playerId == this.playerId) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     update(){
@@ -775,8 +794,8 @@ function myIncludes(array, element) {
 
 if (canvas != null){
     var board = new Board(180,180,540);
-    var plate = new Plate(180,180+540,540,180);
     var PLAYER_ID = null;
+    var plate = null;
     
     var starting_positions = new Map();
     starting_positions.set(0, {king: [[4,8]], pawn: [[3,7],[5,7],[4,6]], silver: [[2,8],[6,8]], gold: [[3,8],[5,8]], rook: [[4,7]]});
@@ -788,6 +807,7 @@ if (canvas != null){
 
 socket.on('playerId', function (id) {
     PLAYER_ID = id;
+    plate = new Plate(180,180+540,540,180,id);
     var deg = [0,90,180,-90];
     console.log(id);
     var tmpId = id;
