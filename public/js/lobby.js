@@ -173,7 +173,9 @@ function getMousePosition(canvas, event) {
         var position = board.getSquareByCoord(x,y);
 
         if (selectedPrisoner != null && position != null && position[0] == null) {
-            socket.emit('clickEvent', position, PLAYER_ID); // POSIELAM NA SERVER ZE SOM VYKONAL TAH (TENTO TAH JE UZ PO VSETKYCH KONTROLACH)! [DOKLADANIM]
+            if (myIncludes(selectedPrisoner.listOfValidMoves(), [position[2],position[3]])) {
+                socket.emit('clickEvent', position, PLAYER_ID); // POSIELAM NA SERVER ZE SOM VYKONAL TAH (TENTO TAH JE UZ PO VSETKYCH KONTROLACH)! [DOKLADANIM]
+            }
         }
 
         if (position != null && position[0] != null && position[1] != null) {
@@ -526,7 +528,7 @@ class Board{
             selectedPrisoner.obj.update();
             selectedPrisoner.hideMyMoves();
             if (myIncludes(selectedPrisoner.listOfValidMoves(),[x,y])){
-                return [null,selectedPrisoner.name,x,y];
+                return [null,selectedPrisoner.type,x,y];
             } else {
                 selectedPrisoner = null;
             }
