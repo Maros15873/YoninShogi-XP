@@ -179,7 +179,7 @@ function getMousePosition(canvas, event) {
         if (position != null && position[0] != null && position[1] != null) {
             if (board.squares[position[0]][position[1]].piece != null && board.squares[position[0]][position[1]].piece.playerId == PLAYER_ID){ 
                 if (board.squares[position[0]][position[1]].piece.isValidMove(position[2],position[3])){   
-                    if (myIncludes(board.squares[position[0]][position[1]].piece.listOfMoves(), [position[2],position[3]])) {
+                    if (myIncludes(board.squares[position[0]][position[1]].piece.listOfValidMoves(), [position[2],position[3]])) {
                         socket.emit('clickEvent', position, PLAYER_ID); // POSIELAM NA SERVER ZE SOM VYKONAL TAH (TENTO TAH JE UZ PO VSETKYCH KONTROLACH)!
                     }              
                 }
@@ -200,7 +200,7 @@ if (canvas != null){
 
 socket.on('click', function (position,id) { //INFORMACIA PRE VSETKYCH O USPESNE VYKONANOM TAHU!
     var new_position = getRealPosition(position, id);
-    if (new_position[0] == null){
+    if (new_position[0] == null){ //DOKLADANIE 
         board.squares[new_position[2]][new_position[3]].addPiece(new_position[1], id, getDegById(id));  
         board.squares[new_position[2]][new_position[3]].update();
         
@@ -209,22 +209,22 @@ socket.on('click', function (position,id) { //INFORMACIA PRE VSETKYCH O USPESNE 
             selectedPrisoner = null;
         }
         
-    } else {
+    } else { //KLASICKY TAH
         var answer = false;
 
         if (PLAYER_ID == id && board.squares[new_position[0]][new_position[1]].piece.promoted == false && 
             (board.squares[new_position[0]][new_position[1]].piece.type != "king" && board.squares[new_position[0]][new_position[1]].piece.type != "gold") &&
             (board.squares[position[0]][position[1]].isInPromotionZone() || board.squares[position[2]][position[3]].isInPromotionZone())){
-            answer = confirm("Promote?");
+            answer = confirm("Promote?"); //HRACOVI VYSKOCI OKNO KDE SA ROZHODNE CI CHCE POVYSOVAT
         }
 
-        if (PLAYER_ID == id && board.squares[new_position[2]][new_position[3]].piece != null){
+        if (PLAYER_ID == id && board.squares[new_position[2]][new_position[3]].piece != null){ //AK HRAC ZAJME SUPEROVU FIGURKU
             plate.addPrisoner(board.squares[new_position[2]][new_position[3]].piece.type);
         }
 
-        if (answer){
+        if (answer){ //AK HRAC POVYSOVAL FIGURKU
             socket.emit('promoteEvent', position, id);
-        } else {
+        } else { //BEZ POVYSENIA
             board.squares[new_position[0]][new_position[1]].piece.makeMove(new_position[2],new_position[3]);
         }
 
@@ -373,23 +373,24 @@ class Prisoner{
         this.x = x;
         this.y = y;
         this.sqareSize = squareSize;
-        this.name = name;
+        this.type = name;
         this.number = 0;
         this.playerId = playerId;
         this.obj = new Square(this.x, this.y, null, null, this.sqareSize);
-        this.objName = ctx.fillText(this.name, this.x, this.y-10);
+        this.objName = ctx.fillText(this.type, this.x, this.y-10);
         this.objNumber = ctx.fillText(this.number, this.x, this.y+70);
+        this.deg = getDegById(this.playerId);
     }
 
     showMyMoves() {
-        var list = this.listOfMoves();
+        var list = this.listOfValidMoves();
         for (var i = 0; i < list.length; i++){
             board.squares[list[i][0]][list[i][1]].highlight();
         }
     }
 
     hideMyMoves() {
-        var list = this.listOfMoves();
+        var list = this.listOfValidMoves();
         for (var i = 0; i < list.length; i++){
             board.squares[list[i][0]][list[i][1]].update();
         }
@@ -414,6 +415,17 @@ class Prisoner{
         return list;
     }
 
+    listOfValidMoves() {
+        var moves = this.listOfMoves();
+        var list = [];
+        for (var i = 0; i < moves.length; i++){
+            if (board.makeFakeMove(this, board.squares[moves[i][0]][moves[i][1]], this.playerId, true) == true){
+                list.push(moves[i]);
+            }
+        }
+        return list;
+    }
+
     checkPawnInSameColumn(col){
         for (var i = 0; i < 9; i++){
             var piece = board.squares[col][i].piece;
@@ -433,11 +445,11 @@ class Prisoner{
         ctx.fillStyle = "black";
 
         this.obj = new Square(this.x, this.y, null, null, this.sqareSize);
-        this.objName = ctx.fillText(this.name, this.x, this.y-10);
+        this.objName = ctx.fillText(this.type, this.x, this.y-10);
         this.objNumber =  ctx.fillText(this.number, this.x, this.y+70);
 
         if (this.number > 0) {
-            this.obj.addPiece(this.name,this.playerId,0);
+            this.obj.addPiece(this.type,this.playerId,0);
         }
     }
 
@@ -513,7 +525,7 @@ class Board{
             //selectedPiece = null;
             selectedPrisoner.obj.update();
             selectedPrisoner.hideMyMoves();
-            if (myIncludes(selectedPrisoner.listOfMoves(),[x,y])){
+            if (myIncludes(selectedPrisoner.listOfValidMoves(),[x,y])){
                 return [null,selectedPrisoner.name,x,y];
             } else {
                 selectedPrisoner = null;
@@ -532,6 +544,57 @@ class Board{
         return [col,row,x,y]
     }
 
+    findPlayersKing(id) {
+        for (var i = 0; i < 9; i++){
+            for (var j = 0; j < 9; j++){
+                if (board.squares[i][j].piece != null) {
+                    if (board.squares[i][j].piece.playerId == id && board.squares[i][j].piece.type == "king"){
+                        return board.squares[i][j].piece;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    makeFakeMove(squareFrom, squareTo, playerId, prisoner=false){
+
+        if (prisoner == true) {
+
+            squareTo.piece = new FakePiece(squareFrom.playerId, squareTo.col, squareTo.row, squareFrom.deg, squareFrom.type);
+            board.squares[squareTo.column][squareTo.row] = squareTo;
+
+            var goodMove = !isKingInCheck(playerId);
+
+            squareTo.piece = null;
+            board.squares[squareTo.column][squareTo.row] = squareTo;
+
+            return goodMove;
+
+        } else {
+            var piece1 = squareFrom.piece;
+            var piece2 = squareTo.piece;
+            
+            squareFrom.piece = (piece2 == null) ? null : new FakePiece(piece2.playerId, piece2.col, piece2.row, piece2.deg, piece2.type);
+            squareTo.piece = (piece1 == null) ? null : new FakePiece(piece1.playerId, piece1.col, piece1.row, piece1.deg, piece1.type);
+
+            board.squares[squareFrom.column][squareFrom.row] = squareFrom;
+            board.squares[squareTo.column][squareTo.row] = squareTo;
+
+            var goodMove = !isKingInCheck(playerId);
+
+            squareFrom.piece = piece1;
+            squareTo.piece = piece2;
+
+            board.squares[squareFrom.column][squareFrom.row] = squareFrom;
+            board.squares[squareTo.column][squareTo.row] = squareTo;
+
+            return goodMove;
+        }
+        
+        
+    }
+
     
 
 }
@@ -546,6 +609,24 @@ class Square{
         this.size = size;
         this.obj = ctx.strokeRect(this.x, this.y, this.size, this.size);
         this.piece = null;
+    }
+
+    isSquareInCheck(playerId){
+        for (var i = 0; i < 9; i++){
+            for (var j = 0; j < 9; j++){
+                if (board.squares[i][j].piece != null) {
+                    if (board.squares[i][j].piece.playerId != playerId) {
+                        var moves = board.squares[i][j].piece.listOfMoves();
+                        for (var k = 0; k < moves.length; k++){
+                            if (compare(moves[k], [this.column, this.row]) == true){
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     addPiece(type,player_id,deg,promoted=false){
@@ -590,14 +671,18 @@ class Piece{
         this.x = x;
         this.y = y;
         this.type = type;
-        this.img = new Image();
-        this.img.src = src;
+        
+        this.img = (src == null) ? null : new Image();
+        if (this.img != null){
+            this.img.src = src;
+            this.img.onload = () => {
+                this.showImage();
+            }
+        }
+        
         this.deg = deg;
         this.column = col;
         this.row = row;
-        this.img.onload = () => {
-            this.showImage();
-        }
         this.promoted = promoted;
         this.moves = this.assignMoves();
     }
@@ -718,14 +803,14 @@ class Piece{
     }
 
     showMyMoves() {
-        var list = this.listOfMoves();
+        var list = this.listOfValidMoves();
         for (var i = 0; i < list.length; i++){
             board.squares[list[i][0]][list[i][1]].highlight();
         }
     }
 
     hideMyMoves() {
-        var list = this.listOfMoves();
+        var list = this.listOfValidMoves();
         for (var i = 0; i < list.length; i++){
             board.squares[list[i][0]][list[i][1]].update();
         }
@@ -756,6 +841,17 @@ class Piece{
         return list;
     }
 
+    listOfValidMoves() {
+        var moves = this.listOfMoves();
+        var list = [];
+        for (var i = 0; i < moves.length; i++){
+            if (board.makeFakeMove(board.squares[this.column][this.row], board.squares[moves[i][0]][moves[i][1]], this.playerId) == true){
+                list.push(moves[i]);
+            }
+        }
+        return list;
+    }
+
     isValidMove(column, row){
 
         if (!(column >= 0 && column <= 8 && row >= 0 && row <= 8)){
@@ -777,6 +873,12 @@ class Piece{
         
     }
 
+}
+
+class FakePiece extends Piece{
+    constructor(playerId, col, row, deg, type){
+        super(playerId,null,null,col,row,null,deg,type);
+    }
 }
 
 function compare(a,b){
@@ -853,6 +955,19 @@ function getDegById(id) {
 
     return null;
     
+}
+
+function isKingInCheck(playerId) {
+    for (var i = 0; i < 9; i++){
+        for (var j = 0; j < 9; j++){
+            if (board.squares[i][j].piece != null){
+                if (board.squares[i][j].piece.playerId == playerId && board.squares[i][j].piece.type == "king"){
+                    return board.squares[i][j].isSquareInCheck()   
+                }
+            }
+        }
+    }
+    throw "King is not on board! [" + playerId + "]";
 }
 
 
