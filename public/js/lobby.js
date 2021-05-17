@@ -162,7 +162,7 @@ function getMousePosition(canvas, event) {
     console.log("Coordinate x: " + x, 
                 "Coordinate y: " + y);
 
-    var position_prisoner = plate.clickPrisoner(x,y);
+    var position_prisoner = plates[0].clickPrisoner(x,y);
 
     if (position_prisoner != null){
         if (position_prisoner.number > 0){
@@ -215,6 +215,9 @@ socket.on('click', function (position,id, turn) { //INFORMACIA PRE VSETKYCH O US
         if (PLAYER_ID == id) {
             selectedPrisoner.removePrisoner();
             selectedPrisoner = null;
+        } else {
+            var prisoner = getPrisonerById(id,new_position[1]);
+            prisoner.removePrisoner();
         }
         
     } else { //KLASICKY TAH
@@ -227,7 +230,9 @@ socket.on('click', function (position,id, turn) { //INFORMACIA PRE VSETKYCH O US
         }
 
         if (PLAYER_ID == id && board.squares[new_position[2]][new_position[3]].piece != null){ //AK HRAC ZAJME SUPEROVU FIGURKU
-            plate.addPrisoner(board.squares[new_position[2]][new_position[3]].piece.type);
+            plates[0].addPrisoner(board.squares[new_position[2]][new_position[3]].piece.type);
+        } else if (board.squares[new_position[2]][new_position[3]].piece != null) {
+            getPlateById(id).addPrisoner(board.squares[new_position[2]][new_position[3]].piece.type);
         }
 
         if (answer){ //AK HRAC POVYSOVAL FIGURKU
@@ -317,7 +322,7 @@ function transpose(matrix,forth=true) {
 
 class Plate{
 
-    constructor(x,y,width,height,playerId,name) {
+    constructor(x,y,width,height,playerId,name,horizontal) {
         this.x = x;
         this.y = y;
         this.width = width;
@@ -325,6 +330,7 @@ class Plate{
         this.playerId = playerId;
         this.sqareSize = 60;
         this.name = name;
+        this.horizontal = horizontal;
 
         ctx.font = "30px Arial";
         this.objName = ctx.fillText(this.name, this.x + 10, this.y+40);
@@ -348,8 +354,13 @@ class Plate{
         var names = ["pawn","silver","gold","rook"];
         var matrix = Array(4).fill();
         for (var i = 0; i < 4; i++) {
-            matrix[i] = new Prisoner(x,y,squareSize,names[i],this.playerId);
-            x = x + 70;
+            if (this.horizontal == true){
+                matrix[i] = new Prisoner(x,y,squareSize,names[i],this.playerId);
+                x = x + 70;
+            } else {
+                matrix[i] = new Prisoner(x-75,y+10,squareSize,names[i],this.playerId);
+                y = y + 110;
+            }
         }
         return matrix;
     }
@@ -459,7 +470,7 @@ class Prisoner{
 
         this.obj = new Square(this.x, this.y, null, null, this.sqareSize);
         this.objName = ctx.fillText(this.type, this.x, this.y-10);
-        this.objNumber =  ctx.fillText(this.number, this.x, this.y+70);
+        this.objNumber =  ctx.fillText(this.number, this.x, this.y+75);
 
         if (this.number > 0) {
             this.obj.addPiece(this.type,this.playerId,0);
@@ -911,7 +922,7 @@ function myIncludes(array, element) {
 if (canvas != null){
     var board = new Board(180,180,540);
     var PLAYER_ID = null;
-    var plate = null;
+    var plates = [];
     
     var starting_positions = new Map();
     starting_positions.set(0, {king: [[4,8]], pawn: [[3,7],[5,7],[4,6]], silver: [[2,8],[6,8]], gold: [[3,8],[5,8]], rook: [[4,7]]});
@@ -921,11 +932,38 @@ if (canvas != null){
 }
 
 
-socket.on('playerId', function (id, name, numberOfPlayers) {
-    if (numberOfPlayers == 4){
+socket.on('playerId', function (id, name, players) {
+
+    if (players.length == 4){
+
+        console.log(players);
+
         PLAYER_ID = id;
         PLAYER_NAME = name;
-        plate = new Plate(180,180+540,540,180,id,name);
+
+        plates.push(new Plate(180,180+540,540,180,id,name,true));
+        var horizontal = true
+        var akt = PLAYER_ID + 1;
+        var positions = [[0,180,180,540],[180,0,540,180],[180+540,180,180,540]];
+        for (var i = 0; i < 3; i++){
+            
+            if (akt > 3) {
+                akt = 0;
+            }
+
+            horizontal = (horizontal) ? false: true;
+
+            if (players[akt].playerNumber != PLAYER_ID){
+                plates.push(new Plate(
+                    positions[i][0],
+                    positions[i][1],
+                    positions[i][2],
+                    positions[i][3],
+                    players[akt].playerNumber,players[akt].name,horizontal));
+            }
+            akt += 1;
+        }
+
         var deg = [0,90,180,-90];
         console.log(id);
         var tmpId = id;
@@ -971,6 +1009,29 @@ function getDegById(id) {
 
     return null;
     
+}
+
+function getPlateById(id) {
+    for (var i = 0; i < plates.length; i++){
+        if (plates[i].playerId == id) {
+            return plates[i];
+        }
+    }
+    return null;
+}
+
+function getPrisonerById(id, type) {
+    var plate = getPlateById(id);
+    if (plate == null){
+        return null;
+    }
+
+    for (var i = 0; i < plate.prisoners.length; i++){
+        if (plate.prisoners[i].type == type){
+            return plate.prisoners[i];
+        }
+    }
+    return null;
 }
 
 function isKingInCheck(playerId) {

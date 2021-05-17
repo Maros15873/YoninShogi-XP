@@ -65,7 +65,7 @@ io.on('connection',(socket) => {
         var room = rooms.getRoom(user.room);
 
         if (user) {
-            io.to(socket.id).emit('playerId',user.playerNumber, user.name, room.users.length);
+            io.to(socket.id).emit('playerId',user.playerNumber, user.name, room.users);
         }
     });
 
