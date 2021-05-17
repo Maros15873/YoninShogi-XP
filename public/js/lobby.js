@@ -205,8 +205,6 @@ if (canvas != null){
 
 socket.on('click', function (position,id, turn) { //INFORMACIA PRE VSETKYCH O USPESNE VYKONANOM TAHU!
 
-    console.log("na tahu: " + turn);
-
     var new_position = getRealPosition(position, id);
     if (new_position[0] == null){ //DOKLADANIE 
         board.squares[new_position[2]][new_position[3]].addPiece(new_position[1], id, getDegById(id));  
@@ -242,6 +240,15 @@ socket.on('click', function (position,id, turn) { //INFORMACIA PRE VSETKYCH O US
         }
 
     }
+
+    var check = nearestKingInCheck(turn);
+    console.log("king in check: "+check);
+    if (check != null) {
+        socket.emit('changeTurnByCheck',check);
+    }
+
+    console.log("na tahu: " + turn);
+
 });
 
 socket.on('promote', function (position, id){
@@ -1030,6 +1037,22 @@ function getPrisonerById(id, type) {
         if (plate.prisoners[i].type == type){
             return plate.prisoners[i];
         }
+    }
+    return null;
+}
+
+function nearestKingInCheck(id){
+    var akt = id + 1;
+    for (var i = 0; i < 4; i++){
+        if (akt > 3) {
+            akt = 0;
+        }
+
+        if (isKingInCheck(akt) == true) {
+            return akt;
+        }
+
+        akt += 1;
     }
     return null;
 }

@@ -60,6 +60,13 @@ io.on('connection',(socket) => {
         callback();
     });
 
+    socket.on('changeTurnByCheck', (id) => {
+        var user = users.getUser(socket.id);
+        var room = rooms.getRoom(user.room);
+        room.changeTurn(id);
+        io.to(user.room).emit('updateUserList', users.getUserList(user.room), room.whoseTurn(), false);
+    });
+
     socket.on('playerIdEvent', () => {
         var user = users.getUser(socket.id);
         var room = rooms.getRoom(user.room);
@@ -74,7 +81,7 @@ io.on('connection',(socket) => {
 
         if (user && user.myMove) {
             var room = rooms.getRoom(user.room);
-            room.changeTurn();
+            room.changeTurn(null);
             io.to(user.room).emit('click',position,playerN,room.whoseTurn());
             io.to(user.room).emit('updateUserList', users.getUserList(user.room), room.whoseTurn(), false);
         }

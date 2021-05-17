@@ -21,14 +21,19 @@ class Room{
         return -99;
     }
 
-    changeTurn () {
+    changeTurn (id) {
         var index = this.whoseTurn();
         this.users[index].myMove = false;
-        var newIndex = index + 1;
-        if (newIndex >= this.users.length) {
-            newIndex = 0;
+        if (id == null){
+            var newIndex = index + 1;
+            if (newIndex >= this.users.length) {
+                newIndex = 0;
+            }
+            this.users[newIndex].myMove = true;
+        } else {
+            this.users[id].myMove = true;
         }
-        this.users[newIndex].myMove = true;
+        
     }
 
     addUser (user) {
