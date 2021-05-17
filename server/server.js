@@ -52,7 +52,7 @@ io.on('connection',(socket) => {
             room.addUser(user);
         }
 
-        io.to(params.room).emit('updateUserList', users.getUserList(params.room));
+        io.to(params.room).emit('updateUserList', users.getUserList(params.room), room.whoseTurn());
         io.emit('updateRoomList', rooms.getRoomList());
 
         console.log(`${params.name} connected to [Room ${params.room}].`);
@@ -62,9 +62,10 @@ io.on('connection',(socket) => {
 
     socket.on('playerIdEvent', () => {
         var user = users.getUser(socket.id);
+        var room = rooms.getRoom(user.room);
 
         if (user) {
-            io.to(socket.id).emit('playerId',user.playerNumber);
+            io.to(socket.id).emit('playerId',user.playerNumber, user.name, room.users.length);
         }
     });
 
@@ -74,7 +75,8 @@ io.on('connection',(socket) => {
         if (user && user.myMove) {
             var room = rooms.getRoom(user.room);
             room.changeTurn();
-            io.to(user.room).emit('click',position,playerN);
+            io.to(user.room).emit('click',position,playerN,room.whoseTurn());
+            io.to(user.room).emit('updateUserList', users.getUserList(user.room), room.whoseTurn(), false);
         }
     });
 
@@ -101,7 +103,7 @@ io.on('connection',(socket) => {
 
         if (user) {
             rooms.removeUser(socket.id);
-            io.to(user.room).emit('updateUserList', users.getUserList(user.room));
+            io.to(user.room).emit('updateUserList', users.getUserList(user.room), null); //TUTO BY NEMALO AKTUALIZOVAT LEN ZOZNAM HRACOV ALE AJ NEJAK KOMPLEXNEJSIE ZAREAGOVAT NA ODCHOD HRACA
             io.emit('updateRoomList', rooms.getRoomList(user.room));
 
             console.log(`${user.name} disconnected from [Room ${user.room}].`);

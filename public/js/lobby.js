@@ -79,11 +79,11 @@ socket.on('updateRoomList', function (rooms) {
     jQuery('#rooms').html(ol);
 });
 
-socket.on('updateUserList', function (users) {
+socket.on('updateUserList', function (users, playerOnTurn, drawPieces=true) {
     var ol = jQuery('<ol></ol>');
 
     users.forEach(function (user) {
-        if (user.id == this.socket.id) {
+        if (user.playerNumber == playerOnTurn) {
             //console.log(user);
             ol.append(jQuery('<li style="background-color:#78AB46;color:white;font-weight: bold;"></li>').text(user.name));
         } else {
@@ -94,7 +94,10 @@ socket.on('updateUserList', function (users) {
 
     jQuery('#users').html(ol);
 
-    socket.emit('playerIdEvent');//NAKRESLENIE FIGUROK TMP!
+    if (drawPieces == true){
+        socket.emit('playerIdEvent');//NAKRESLENIE FIGUROK TMP!
+    }
+    
 });
 
 socket.on('newMessage', function (message) {
@@ -200,7 +203,10 @@ if (canvas != null){
 }
 
 
-socket.on('click', function (position,id) { //INFORMACIA PRE VSETKYCH O USPESNE VYKONANOM TAHU!
+socket.on('click', function (position,id, turn) { //INFORMACIA PRE VSETKYCH O USPESNE VYKONANOM TAHU!
+
+    console.log("na tahu: " + turn);
+
     var new_position = getRealPosition(position, id);
     if (new_position[0] == null){ //DOKLADANIE 
         board.squares[new_position[2]][new_position[3]].addPiece(new_position[1], id, getDegById(id));  
@@ -311,13 +317,18 @@ function transpose(matrix,forth=true) {
 
 class Plate{
 
-    constructor(x,y,width,height,playerId) {
+    constructor(x,y,width,height,playerId,name) {
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
         this.playerId = playerId;
         this.sqareSize = 60;
+        this.name = name;
+
+        ctx.font = "30px Arial";
+        this.objName = ctx.fillText(this.name, this.x + 10, this.y+40);
+        ctx.font = "12px Arial";
 
         ctx.lineWidth = 2;
         this.obj = ctx.strokeRect(this.x, this.y, this.width, this.height);
@@ -380,7 +391,7 @@ class Prisoner{
         this.playerId = playerId;
         this.obj = new Square(this.x, this.y, null, null, this.sqareSize);
         this.objName = ctx.fillText(this.type, this.x, this.y-10);
-        this.objNumber = ctx.fillText(this.number, this.x, this.y+70);
+        this.objNumber = ctx.fillText(this.number, this.x, this.y+75);
         this.deg = getDegById(this.playerId);
     }
 
@@ -910,32 +921,35 @@ if (canvas != null){
 }
 
 
-socket.on('playerId', function (id) {
-    PLAYER_ID = id;
-    plate = new Plate(180,180+540,540,180,id);
-    var deg = [0,90,180,-90];
-    console.log(id);
-    var tmpId = id;
+socket.on('playerId', function (id, name, numberOfPlayers) {
+    if (numberOfPlayers == 4){
+        PLAYER_ID = id;
+        PLAYER_NAME = name;
+        plate = new Plate(180,180+540,540,180,id,name);
+        var deg = [0,90,180,-90];
+        console.log(id);
+        var tmpId = id;
 
-    for (var i = 0; i < 4; i ++){
-        var obj = starting_positions.get(i);
-        board.squares[obj.king[0][0]][obj.king[0][1]].addPiece("king",tmpId,deg[i]);
-        for (var j = 0; j < obj.pawn.length; j++){
-            board.squares[obj.pawn[j][0]][obj.pawn[j][1]].addPiece("pawn",tmpId,deg[i]);
-        }
-        for (var j = 0; j < obj.silver.length; j++){
-            board.squares[obj.silver[j][0]][obj.silver[j][1]].addPiece("silver",tmpId,deg[i]);
-        }
-        for (var j = 0; j < obj.gold.length; j++){
-            board.squares[obj.gold[j][0]][obj.gold[j][1]].addPiece("gold",tmpId,deg[i]);
-        }
-        for (var j = 0; j < obj.rook.length; j++){
-            board.squares[obj.rook[j][0]][obj.rook[j][1]].addPiece("rook",tmpId,deg[i]);
-        }
+        for (var i = 0; i < 4; i ++){
+            var obj = starting_positions.get(i);
+            board.squares[obj.king[0][0]][obj.king[0][1]].addPiece("king",tmpId,deg[i]);
+            for (var j = 0; j < obj.pawn.length; j++){
+                board.squares[obj.pawn[j][0]][obj.pawn[j][1]].addPiece("pawn",tmpId,deg[i]);
+            }
+            for (var j = 0; j < obj.silver.length; j++){
+                board.squares[obj.silver[j][0]][obj.silver[j][1]].addPiece("silver",tmpId,deg[i]);
+            }
+            for (var j = 0; j < obj.gold.length; j++){
+                board.squares[obj.gold[j][0]][obj.gold[j][1]].addPiece("gold",tmpId,deg[i]);
+            }
+            for (var j = 0; j < obj.rook.length; j++){
+                board.squares[obj.rook[j][0]][obj.rook[j][1]].addPiece("rook",tmpId,deg[i]);
+            }
 
-        tmpId += 1;
-        if (tmpId > 3) {
-            tmpId = 0;
+            tmpId += 1;
+            if (tmpId > 3) {
+                tmpId = 0;
+            }
         }
     }
     
