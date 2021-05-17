@@ -5,6 +5,15 @@ class User{
         this.room = room;
         this.myMove = false;
         this.playerNumber = null;
+        this.alive = true;
+    }
+
+    isDead(){
+        return (this.alive == false);
+    }
+
+    killPlayer(){
+        this.alive = false;
     }
 
     setMyMove (bool) {

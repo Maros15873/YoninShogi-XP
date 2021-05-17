@@ -203,6 +203,8 @@ if (canvas != null){
 }
 
 
+
+
 socket.on('click', function (position,id, turn) { //INFORMACIA PRE VSETKYCH O USPESNE VYKONANOM TAHU!
 
     var new_position = getRealPosition(position, id);
@@ -242,13 +244,29 @@ socket.on('click', function (position,id, turn) { //INFORMACIA PRE VSETKYCH O US
     }
 
     var check = nearestKingInCheck(turn);
+    for (var i = 0; i < check.length; i++){
+        if (numberOfValidMoves(check[i]) == 0) {
+            socket.emit('checkMate', check[i]);
+        }
+    }
+    check = nearestKingInCheck(turn);
+
     console.log("king in check: "+check);
-    if (check != null) {
-        socket.emit('changeTurnByCheck',check);
+    if (check.length != 0) {
+        socket.emit('changeTurnByCheck',check[0]);
     }
 
     console.log("na tahu: " + turn);
 
+});
+
+socket.on('checkMateUpdate', function (id) {
+    checkMate(id);
+});
+
+socket.on('endOfGame', function (winner) {
+    canvas.cloneNode(true);
+    alert("WINNER: "+winner);
 });
 
 socket.on('promote', function (position, id){
@@ -436,7 +454,6 @@ class Prisoner{
                         if (j > 0 && !this.checkPawnInSameColumn(i)) {
                             list.push([i,j]);
                         }
-
                     } else {
                         list.push([i,j]);
                     }                   
@@ -447,6 +464,9 @@ class Prisoner{
     }
 
     listOfValidMoves() {
+        if (this.number == 0) {
+            return [];
+        }
         var moves = this.listOfMoves();
         var list = [];
         for (var i = 0; i < moves.length; i++){
@@ -553,7 +573,6 @@ class Board{
 
         if (selectedPrisoner != null) {
             selectedPiece.update();
-            //selectedPiece = null;
             selectedPrisoner.obj.update();
             selectedPrisoner.hideMyMoves();
             if (myIncludes(selectedPrisoner.listOfValidMoves(),[x,y])){
@@ -643,9 +662,12 @@ class Square{
     }
 
     isSquareInCheck(playerId){
+        if (board.squares[this.column][this.row].piece != null && board.squares[this.column][this.row].piece.alive == false){
+            return false;
+        }
         for (var i = 0; i < 9; i++){
             for (var j = 0; j < 9; j++){
-                if (board.squares[i][j].piece != null) {
+                if (board.squares[i][j].piece != null && board.squares[i][j].piece.alive == true) {
                     if (board.squares[i][j].piece.playerId != playerId) {
                         var moves = board.squares[i][j].piece.listOfMoves();
                         for (var k = 0; k < moves.length; k++){
@@ -702,6 +724,8 @@ class Piece{
         this.x = x;
         this.y = y;
         this.type = type;
+
+        this.alive = true;
         
         this.img = (src == null) ? null : new Image();
         if (this.img != null){
@@ -893,6 +917,10 @@ class Piece{
             return false;
         }
 
+        if (board.squares[column][row].piece != null && board.squares[column][row].piece.type == "king" && board.squares[column][row].piece.promoted == true) {
+            return false;
+        }
+
         var move = [column-this.column,row - this.row];
 
         for (var i = 0; i < this.moves.length; i++){
@@ -1042,6 +1070,7 @@ function getPrisonerById(id, type) {
 }
 
 function nearestKingInCheck(id){
+    var result = [];
     var akt = id + 1;
     for (var i = 0; i < 4; i++){
         if (akt > 3) {
@@ -1049,12 +1078,12 @@ function nearestKingInCheck(id){
         }
 
         if (isKingInCheck(akt) == true) {
-            return akt;
+            result.push(akt);
         }
 
         akt += 1;
     }
-    return null;
+    return result;
 }
 
 function isKingInCheck(playerId) {
@@ -1070,6 +1099,38 @@ function isKingInCheck(playerId) {
     throw "King is not on board! [" + playerId + "]";
 }
 
+function numberOfValidMoves(playerId) {
+    var count = 0;
+    for (var i = 0; i < 9; i++){
+        for (var j = 0; j < 9; j++){
+            if (board.squares[i][j].piece != null){
+                if (board.squares[i][j].piece.playerId == playerId){
+                    count += board.squares[i][j].piece.listOfValidMoves().length;
+                }
+            }
+        }
+    }
+    var plate = getPlateById(playerId);
+    for (var i = 0; i < plate.prisoners.length; i++){
+        count += plate.prisoners[i].listOfValidMoves().length;
+    }
+    return count;
+}
+
+function checkMate(playerId){
+    for (var i = 0; i < 9; i++){
+        for (var j = 0; j < 9; j++){
+            if (board.squares[i][j].piece != null){
+                if (board.squares[i][j].piece.playerId == playerId){
+                    if (board.squares[i][j].piece.type == "king"){
+                        board.squares[i][j].addPiece("king",playerId,getDegById(playerId),true);
+                    }
+                    board.squares[i][j].piece.alive = false;
+                }
+            }
+        }
+    }
+}
 
 
 

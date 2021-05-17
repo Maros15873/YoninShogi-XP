@@ -60,6 +60,19 @@ io.on('connection',(socket) => {
         callback();
     });
 
+    socket.on('checkMate', (id) => {
+        var user = users.getUser(socket.id);
+        var room = rooms.getRoom(user.room);
+        room.checkMate(id);
+        io.to(user.room).emit('checkMateUpdate', id);
+        var koniec = room.gameEnd();
+        if (koniec != null) {
+            koniec.killPlayer();
+            koniec.myMove = false;
+            io.to(user.room).emit('endOfGame', koniec.name);
+        }
+    });
+
     socket.on('changeTurnByCheck', (id) => {
         var user = users.getUser(socket.id);
         var room = rooms.getRoom(user.room);

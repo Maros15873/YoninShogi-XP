@@ -109,6 +109,81 @@ describe('Changing turn', () => {
 
         expect([user1.myMove,user2.myMove]).toEqual([true,false]);
     });
+
+    it('1 -> 3 (2nd is dead)', () => {
+        var room = new Room('C#123','C');
+        var user1 = new User('id1','Jozko','C#123');
+        var user2 = new User('id2','Dezko','C#123');
+        var user3 = new User('id3','Keko','C#123');
+        room.addUser(user1);
+        room.addUser(user2);
+        room.addUser(user3);
+
+        user2.killPlayer();
+
+        room.changeTurn();
+
+        expect([user1.myMove,user2.myMove,user3.myMove]).toEqual([false,false,true]);
+    });
+
+    it('1 -> 4 (2nd and 3rd are dead)', () => {
+        var room = new Room('C#123','C');
+        var user1 = new User('id1','Jozko','C#123');
+        var user2 = new User('id2','Dezko','C#123');
+        var user3 = new User('id3','Keko','C#123');
+        var user4 = new User('id4','Feko','C#123');
+        room.addUser(user1);
+        room.addUser(user2);
+        room.addUser(user3);
+        room.addUser(user4);
+
+        user2.killPlayer();
+        user3.killPlayer();
+
+        room.changeTurn();
+
+        expect([user1.myMove,user2.myMove,user3.myMove,user4.myMove]).toEqual([false,false,false,true]);
+    });
+
+    it('4 -> 3 (1st and 2nd are dead)', () => {
+        var room = new Room('C#123','C');
+        var user1 = new User('id1','Jozko','C#123');
+        var user2 = new User('id2','Dezko','C#123');
+        var user3 = new User('id3','Keko','C#123');
+        var user4 = new User('id4','Feko','C#123');
+        room.addUser(user1);
+        room.addUser(user2);
+        room.addUser(user3);
+        room.addUser(user4);
+
+        room.changeTurn();
+        room.changeTurn();
+        room.changeTurn();
+
+        user1.killPlayer();
+        user2.killPlayer();
+
+        room.changeTurn();
+
+        expect([user1.myMove,user2.myMove,user3.myMove,user4.myMove]).toEqual([false,false,true,false]);
+    });
+
+    it('1 -> 3 (2nd is dead) using checkmate', () => {
+        var room = new Room('C#123','C');
+        var user1 = new User('id1','Jozko','C#123');
+        var user2 = new User('id2','Dezko','C#123');
+        user2.playerNumber = 1;
+        var user3 = new User('id3','Keko','C#123');
+        room.addUser(user1);
+        room.addUser(user2);
+        room.addUser(user3);
+
+        room.checkMate(1);
+
+        room.changeTurn();
+
+        expect([user1.myMove,user2.myMove,user3.myMove]).toEqual([false,false,true]);
+    });
 });
 
 

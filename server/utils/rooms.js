@@ -8,6 +8,14 @@ class Room{
         this.users = [];
     }
 
+    checkMate(playerNumber){
+        for (var i = 0; i < this.users.length; i++){
+            if (this.users[i].playerNumber == playerNumber) {
+                this.users[i].killPlayer();
+            }
+        }
+    }
+
     isEmpty () {
         return this.users.length == 0;
     }
@@ -21,6 +29,23 @@ class Room{
         return -99;
     }
 
+    gameEnd() {
+        var count = 0;
+        for (var i = 0; i < this.users.length; i++){
+            if (this.users[i].isDead() == true) {
+                count += 1;
+            } else {
+                var winner = this.users[i];
+            }
+        }
+
+        if (count == 3) {
+            return winner;
+        }
+
+        return null;
+    }
+
     changeTurn (id) {
         var index = this.whoseTurn();
         this.users[index].myMove = false;
@@ -30,8 +55,13 @@ class Room{
                 newIndex = 0;
             }
             this.users[newIndex].myMove = true;
+            if (this.users[newIndex].isDead() == true) {
+                this.changeTurn(null);
+            } 
         } else {
-            this.users[id].myMove = true;
+            if (this.users[id].isDead() == false) {
+                this.users[id].myMove = true;
+            }
         }
         
     }
