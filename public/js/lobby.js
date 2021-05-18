@@ -253,7 +253,6 @@ socket.on('click', function (position,id, turn) { //INFORMACIA PRE VSETKYCH O US
             return;
         }
     }
-    check = nearestKingInCheck(turn);
 
     console.log("king in check: "+check);
     if (check.length != 0) {
@@ -639,11 +638,24 @@ class Board{
             return goodMove;
 
         } else {
+            
+            if (squareTo.piece != null && squareTo.piece.type == "king") {
+                console.log("KING!!!!!!");
+            }
+
             var piece1 = squareFrom.piece;
             var piece2 = squareTo.piece;
             
             squareFrom.piece = (piece2 == null) ? null : new FakePiece(piece2.playerId, piece2.col, piece2.row, piece2.deg, piece2.type);
-            squareTo.piece = (piece1 == null) ? null : new FakePiece(piece1.playerId, piece1.col, piece1.row, piece1.deg, piece1.type);
+            squareTo.piece = (piece1 == null) ? null : new FakePiece(piece1.playerId, piece1.col, piece1.row, piece1.deg, piece1.type); //null;
+
+            if (piece1 != null) {
+                if (piece1.type == "king") {
+                    squareTo.piece = (piece1 == null) ? null : new FakePiece(piece1.playerId, piece1.col, piece1.row, piece1.deg, piece1.type); 
+                } else {
+                    squareTo.piece = null;
+                }
+            }
 
             board.squares[squareFrom.column][squareFrom.row] = squareFrom;
             board.squares[squareTo.column][squareTo.row] = squareTo;
@@ -917,7 +929,7 @@ class Piece{
         var moves = this.listOfMoves();
         var list = [];
         for (var i = 0; i < moves.length; i++){
-            if (board.makeFakeMove(board.squares[this.column][this.row], board.squares[moves[i][0]][moves[i][1]], PLAYER_ID) == true){
+            if (board.makeFakeMove(board.squares[this.column][this.row], board.squares[moves[i][0]][moves[i][1]], this.playerId) == true){
                 list.push(moves[i]);
             }
         }
