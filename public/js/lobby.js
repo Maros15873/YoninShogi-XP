@@ -616,6 +616,10 @@ class Board{
 
             var goodMove = !isKingInCheck(playerId);
 
+            if (squareFrom.type == "pawn"){
+                goodMove = goodMove && !pawnMate(squareTo.column, squareTo.row);
+            }
+
             squareTo.piece = null;
             board.squares[squareTo.column][squareTo.row] = squareTo;
 
@@ -1129,6 +1133,16 @@ function checkMate(playerId){
                 }
             }
         }
+    }
+}
+
+function pawnMate(col,row) {
+    row2 = row - 1;
+    if (row2 >= 0 && board.squares[col][row2].piece != null && board.squares[col][row2].piece.type == "king"){
+        var validMoves = numberOfValidMoves(board.squares[col][row2].piece.playerId);
+        return (validMoves == 0);
+    } else {
+        return false;
     }
 }
 
