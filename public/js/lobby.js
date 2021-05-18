@@ -638,24 +638,18 @@ class Board{
             return goodMove;
 
         } else {
-            
-            if (squareTo.piece != null && squareTo.piece.type == "king") {
-                console.log("KING!!!!!!");
-            }
 
-            var piece1 = squareFrom.piece;
-            var piece2 = squareTo.piece;
-            
-            squareFrom.piece = (piece2 == null) ? null : new FakePiece(piece2.playerId, piece2.col, piece2.row, piece2.deg, piece2.type);
-            squareTo.piece = (piece1 == null) ? null : new FakePiece(piece1.playerId, piece1.col, piece1.row, piece1.deg, piece1.type); //null;
+            var piece1 = squareFrom.piece; //kde som
+            var piece2 = squareTo.piece; //kam chcem ist
 
-            if (piece1 != null) {
-                if (piece1.type == "king") {
-                    squareTo.piece = (piece1 == null) ? null : new FakePiece(piece1.playerId, piece1.col, piece1.row, piece1.deg, piece1.type); 
-                } else {
-                    squareTo.piece = null;
-                }
+            if (piece2 != null) {
+                if (piece2.type == "king") {
+                    return true;
+                } 
             }
+            
+            squareFrom.piece = null;
+            squareTo.piece = (piece1 == null) ? null : new FakePiece(piece1.playerId, piece1.col, piece1.row, piece1.deg, piece1.type);
 
             board.squares[squareFrom.column][squareFrom.row] = squareFrom;
             board.squares[squareTo.column][squareTo.row] = squareTo;
