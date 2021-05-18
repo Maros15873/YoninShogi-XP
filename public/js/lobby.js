@@ -288,6 +288,8 @@ socket.on('promote', function (position, id){
     } else {
         board.squares[new_position[2]][new_position[3]].piece.makePromotion();
     }
+
+    highlightLastMove(board.squares[new_position[2]][new_position[3]]);
     
 });
 
@@ -915,7 +917,7 @@ class Piece{
         var moves = this.listOfMoves();
         var list = [];
         for (var i = 0; i < moves.length; i++){
-            if (board.makeFakeMove(board.squares[this.column][this.row], board.squares[moves[i][0]][moves[i][1]], this.playerId) == true){
+            if (board.makeFakeMove(board.squares[this.column][this.row], board.squares[moves[i][0]][moves[i][1]], PLAYER_ID) == true){
                 list.push(moves[i]);
             }
         }
