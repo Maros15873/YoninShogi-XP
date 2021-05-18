@@ -60,11 +60,11 @@ io.on('connection',(socket) => {
         callback();
     });
 
-    socket.on('checkMate', (id) => {
+    socket.on('checkMate', (id,turn) => {
         var user = users.getUser(socket.id);
         var room = rooms.getRoom(user.room);
         room.checkMate(id);
-        io.to(user.room).emit('checkMateUpdate', id);
+        io.to(user.room).emit('checkMateUpdate', id, turn);
         var koniec = room.gameEnd();
         if (koniec != null) {
             koniec.killPlayer();

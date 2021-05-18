@@ -142,6 +142,7 @@ const HEIGHT = 900;
 
 var selectedPiece = null;
 var selectedPrisoner = null;
+var lastMove = null;
 const MATRIX = generatePositions();
 
 function generatePositions(){
@@ -243,10 +244,13 @@ socket.on('click', function (position,id, turn) { //INFORMACIA PRE VSETKYCH O US
 
     }
 
+    highlightLastMove(board.squares[new_position[2]][new_position[3]]);
+
     var check = nearestKingInCheck(turn);
     for (var i = 0; i < check.length; i++){
         if (numberOfValidMoves(check[i]) == 0) {
-            socket.emit('checkMate', check[i]);
+            socket.emit('checkMate', check[i], turn);
+            return;
         }
     }
     check = nearestKingInCheck(turn);
@@ -260,8 +264,15 @@ socket.on('click', function (position,id, turn) { //INFORMACIA PRE VSETKYCH O US
 
 });
 
-socket.on('checkMateUpdate', function (id) {
+socket.on('checkMateUpdate', function (id, turn) {
     checkMate(id);
+    var check = nearestKingInCheck(turn);
+    console.log("king in check (udpate): "+check);
+    if (check.length != 0) {
+        socket.emit('changeTurnByCheck',check[0]);
+    }
+
+    console.log("na tahu: " + turn);
 });
 
 socket.on('endOfGame', function (winner) {
@@ -1109,6 +1120,9 @@ function numberOfValidMoves(playerId) {
         for (var j = 0; j < 9; j++){
             if (board.squares[i][j].piece != null){
                 if (board.squares[i][j].piece.playerId == playerId){
+                    if (board.squares[i][j].piece.alive == false) {
+                        return 0;
+                    }
                     count += board.squares[i][j].piece.listOfValidMoves().length;
                 }
             }
@@ -1144,6 +1158,23 @@ function pawnMate(col,row) {
     } else {
         return false;
     }
+}
+
+function highlightLastMove(square){
+    if (lastMove != null){
+        ctx.strokeStyle = "#000000";
+        ctx.strokeRect(lastMove.x, lastMove.y, lastMove.size, lastMove.size);
+        lastMove = square;
+        ctx.strokeStyle = "#DC143C";
+        ctx.strokeRect(lastMove.x, lastMove.y, lastMove.size, lastMove.size);
+        ctx.strokeStyle = "#000000";
+    } else {
+        lastMove = square;
+        ctx.strokeStyle = "#DC143C";
+        ctx.strokeRect(lastMove.x, lastMove.y, lastMove.size, lastMove.size);
+        ctx.strokeStyle = "#000000";
+    }
+    
 }
 
 
