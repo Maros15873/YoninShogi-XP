@@ -464,7 +464,7 @@ class Prisoner{
                 if(board.squares[i][j].piece == null){
                     if (this.obj.piece != null && this.obj.piece.type == "pawn"){
                         if (j > 0 && !this.checkPawnInSameColumn(i)) {
-                            list.push([i,j]);
+                            list.push([i,j]);    
                         }
                     } else {
                         list.push([i,j]);
@@ -623,13 +623,17 @@ class Board{
 
         if (prisoner == true) {
 
-            squareTo.piece = new FakePiece(squareFrom.playerId, squareTo.col, squareTo.row, squareFrom.deg, squareFrom.type);
+            squareTo.piece = new FakePiece(squareFrom.playerId, squareTo.column, squareTo.row, squareFrom.deg, squareFrom.type);
             board.squares[squareTo.column][squareTo.row] = squareTo;
 
             var goodMove = !isKingInCheck(playerId);
 
-            if (squareFrom.type == "pawn"){
-                goodMove = goodMove && !pawnMate(squareTo.column, squareTo.row);
+            if (squareTo.piece.type == "pawn" && squareTo.row > 0 && board.squares[squareTo.column][squareTo.row - 1].piece != null) { // kontrola matu s pesiakom
+                if (board.squares[squareTo.column][squareTo.row - 1].piece.type == "king" && board.squares[squareTo.column][squareTo.row - 1].piece.playerId != playerId) {
+                    if (numberOfValidMoves(board.squares[squareTo.column][squareTo.row - 1].piece.playerId) == 0) {
+                        goodMove = false;
+                    }
+                }
             }
 
             squareTo.piece = null;
@@ -911,6 +915,7 @@ class Piece{
                         list.push([moveCol, moveRow]);
                     }
                 } else {
+
                     list.push([moveCol, moveRow]);
                 }            
             }
@@ -1155,16 +1160,6 @@ function checkMate(playerId){
                 }
             }
         }
-    }
-}
-
-function pawnMate(col,row) {
-    row2 = row - 1;
-    if (row2 >= 0 && board.squares[col][row2].piece != null && board.squares[col][row2].piece.type == "king"){
-        var validMoves = numberOfValidMoves(board.squares[col][row2].piece.playerId);
-        return (validMoves == 0);
-    } else {
-        return false;
     }
 }
 
