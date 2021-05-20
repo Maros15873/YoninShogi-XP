@@ -100,11 +100,11 @@ io.on('connection',(socket) => {
         }
     });
 
-    socket.on('promoteEvent', (position,id) => {
+    socket.on('promoteEvent', (position,id, turn) => {
         var user = users.getUser(socket.id);
 
         if (user) {
-            io.to(user.room).emit('promote',position,id);
+            io.to(user.room).emit('promote',position,id, turn);
         }
     });
 

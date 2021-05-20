@@ -1,11 +1,8 @@
 var socket = io();
 
 function scrollToBottom () {
-    //Selector
     var messages = jQuery('#messages');
     var newMessage = messages.children('li:last-child');
-
-    //Heights
     var clientHeight = messages.prop('clientHeight');
     var scrollTop = messages.prop('scrollTop');
     var scrollHeight = messages.prop('scrollHeight');
@@ -84,7 +81,6 @@ socket.on('updateUserList', function (users, playerOnTurn, drawPieces=true) {
 
     users.forEach(function (user) {
         if (user.playerNumber == playerOnTurn) {
-            //console.log(user);
             ol.append(jQuery('<li style="background-color:#78AB46;color:white;font-weight: bold;"></li>').text(user.name));
         } else {
             ol.append(jQuery('<li></li>').text(user.name));
@@ -167,11 +163,14 @@ function getMousePosition(canvas, event) {
 
     if (position_prisoner != null){
         if (position_prisoner.number > 0){
+            if (selectedPrisoner != null) {
+                selectedPrisoner.obj.update();
+                selectedPrisoner.hideMyMoves();
+            }
             selectedPrisoner = position_prisoner;
             position_prisoner.obj.highlight();
             position_prisoner.showMyMoves();
-        }  
-  
+        } 
     } else {
 
         var position = board.getSquareByCoord(x,y);
@@ -237,7 +236,7 @@ socket.on('click', function (position,id, turn) { //INFORMACIA PRE VSETKYCH O US
         }
 
         if (answer){ //AK HRAC POVYSOVAL FIGURKU
-            socket.emit('promoteEvent', position, id);
+            socket.emit('promoteEvent', position, id, turn);
         } else { //BEZ POVYSENIA
             board.squares[new_position[0]][new_position[1]].piece.makeMove(new_position[2],new_position[3]);
         }
@@ -279,13 +278,17 @@ socket.on('endOfGame', function (winner) {
     alert("WINNER: "+winner);
 });
 
-socket.on('promote', function (position, id){
+socket.on('promote', function (position, id, turn){
     var new_position = getRealPosition(position, id);
     if (PLAYER_ID == id) {
         board.squares[new_position[0]][new_position[1]].piece.makeMove(new_position[2],new_position[3]);
         board.squares[new_position[2]][new_position[3]].piece.makePromotion();
     } else {
         board.squares[new_position[2]][new_position[3]].piece.makePromotion();
+    }
+    var check = nearestKingInCheck(turn);
+    if (check.length != 0) {
+        socket.emit('changeTurnByCheck',check[0]);
     }
 
     highlightLastMove(board.squares[new_position[2]][new_position[3]]);
@@ -382,6 +385,11 @@ class Plate{
         for (var i = 0; i < 4; i++) {
             if ((x >= this.prisoners[i].x) && (x <= (this.prisoners[i].x + this.sqareSize)) && (y >= this.prisoners[i].y) && (y <= (this.prisoners[i].y + this.sqareSize))){
                 return this.prisoners[i];
+            } else {
+                if (selectedPrisoner != null) {
+                    selectedPrisoner.obj.update();
+                    selectedPrisoner.hideMyMoves();
+                }
             }
         }
         return null;
