@@ -124,22 +124,69 @@ jQuery('#message-form').on('submit', function (e) {
 //--------------------------------------------------------------------------------------------//
 
 var canvas = document.getElementById("hracia_plocha");
+
+const SIZE = 60;
+const nHeight = SIZE * 15;
+const nWidth  = SIZE * 15;
+
+// I just picked 20 at random here.
+// In this instance maxWidth = 56 * 20 = 1,120 and maxHeight = 40 * 20 = 800
+const maxMultiplier = 20;
+const maxWidth = nWidth * maxMultiplier;
+const maxHeight = nHeight * maxMultiplier;
+
+// % of browser window to be taken up by the canvas
+// this can just be set to 1 if you want max height or width
+const windowPercentage = 0.9;
+
+// the canvas' displayed width/height
+// this is what changes when the window is resized 
+// initialized to the native resolution
+let cHeight = nHeight;
+let cWidth = nWidth;
+
 if (canvas != null){
-    var ctx = canvas.getContext("2d");
+    ctx = canvas.getContext("2d");
     ctx.fillStyle = "#FFFFFF";
 
-    canvas.width = 900;
-    canvas.height = 900;
+    canvas.width = nWidth;
+    canvas.height = nHeight;
 }
 
-
-const WIDTH = 900;
-const HEIGHT = 900;
 
 var selectedPiece = null;
 var selectedPrisoner = null;
 var lastMove = null;
 const MATRIX = generatePositions();
+
+function resize() {
+    cWidth = window.innerWidth;
+    cHeight = window.innerHeight;
+  
+    // ratio of the native game size width to height
+    const nativeRatio = nWidth / nHeight;
+    const browserWindowRatio = cWidth / cHeight;
+  
+    // browser window is too wide
+    if (browserWindowRatio > nativeRatio) {
+  
+      cHeight = Math.floor(cHeight * windowPercentage); // optional
+      if (cHeight > maxWidth) cHeight = maxHeight; // optional
+  
+      cWidth = Math.floor(cHeight * nativeRatio);
+    } else {
+      // browser window is too high
+  
+      cWidth = Math.floor(cWidth * windowPercentage); // optional
+      if (cWidth > maxWidth) cWidth = maxWidth; // optional
+  
+      cHeight = Math.floor(cWidth / nativeRatio);
+    }
+  
+    // set the canvas style width and height to the new width and height
+    ctx.canvas.style.width = `${cWidth}px`;
+    ctx.canvas.style.height = `${cHeight}px`;
+  }
 
 function generatePositions(){
     var matrix = Array(9).fill().map(()=>Array(9).fill());
@@ -368,22 +415,22 @@ class Plate{
         this.width = width;
         this.height = height;
         this.playerId = playerId;
-        this.sqareSize = 60;
+        this.sqareSize = SIZE;
         this.name = name;
         this.horizontal = horizontal;
 
         ctx.font = "30px Arial";
-        this.objName = ctx.fillText(this.name, this.x + 10, this.y+40);
+        this.objName = ctx.fillText(this.name, this.x + (SIZE / 6), this.y + ((SIZE / 6) * 4));
         ctx.font = "12px Arial";
 
         ctx.lineWidth = 2;
         this.obj = ctx.strokeRect(this.x, this.y, this.width, this.height);
-        this.prisoners = this.fillPrisoners(this.x + 130, this.y + 80, this.sqareSize);
+        this.prisoners = this.fillPrisoners(this.x + 130, this.y + 80, SIZE);
     }
 
     clickPrisoner(x,y) {
         for (var i = 0; i < 4; i++) {
-            if ((x >= this.prisoners[i].x) && (x <= (this.prisoners[i].x + this.sqareSize)) && (y >= this.prisoners[i].y) && (y <= (this.prisoners[i].y + this.sqareSize))){
+            if ((x >= this.prisoners[i].x) && (x <= (this.prisoners[i].x + SIZE)) && (y >= this.prisoners[i].y) && (y <= (this.prisoners[i].y + SIZE))){
                 return this.prisoners[i];
             } else {
                 if (selectedPrisoner != null) {
@@ -400,11 +447,11 @@ class Plate{
         var matrix = Array(4).fill();
         for (var i = 0; i < 4; i++) {
             if (this.horizontal == true){
-                matrix[i] = new Prisoner(x,y,squareSize,names[i],this.playerId);
-                x = x + 70;
+                matrix[i] = new Prisoner(x,y,SIZE,names[i],this.playerId);
+                x = x + ((SIZE / 6) * 7);
             } else {
-                matrix[i] = new Prisoner(x-75,y+10,squareSize,names[i],this.playerId);
-                y = y + 110;
+                matrix[i] = new Prisoner(x-((SIZE / 6) * 7.5),y+(SIZE / 6),SIZE,names[i],this.playerId);
+                y = y + ((SIZE / 6) * 11);
             }
         }
         return matrix;
@@ -446,8 +493,8 @@ class Prisoner{
         this.number = 0;
         this.playerId = playerId;
         this.obj = new Square(this.x, this.y, null, null, this.sqareSize);
-        this.objName = ctx.fillText(this.type, this.x, this.y-10);
-        this.objNumber = ctx.fillText(this.number, this.x, this.y+75);
+        this.objName = ctx.fillText(this.type, this.x, this.y-(SIZE / 6));
+        this.objNumber = ctx.fillText(this.number, this.x, this.y+((SIZE / 6) * 7.5));
         this.deg = getDegById(this.playerId);
     }
 
@@ -512,12 +559,12 @@ class Prisoner{
     update(){
         
         ctx.fillStyle = "white";
-        ctx.fillRect(this.x-5, this.y-20, this.sqareSize+10, this.sqareSize+40);//premazanie
+        ctx.fillRect(this.x-((SIZE / 6) * 0.5), this.y-((SIZE / 6) * 2), SIZE+(SIZE / 6), SIZE+((SIZE / 6) * 4));//premazanie
         ctx.fillStyle = "black";
 
-        this.obj = new Square(this.x, this.y, null, null, this.sqareSize);
-        this.objName = ctx.fillText(this.type, this.x, this.y-10);
-        this.objNumber =  ctx.fillText(this.number, this.x, this.y+75);
+        this.obj = new Square(this.x, this.y, null, null, SIZE);
+        this.objName = ctx.fillText(this.type, this.x, this.y-(SIZE / 6));
+        this.objNumber =  ctx.fillText(this.number, this.x, this.y+((SIZE / 6) * 7.5));
 
         if (this.number > 0) {
             this.obj.addPiece(this.type,this.playerId,0);
@@ -544,9 +591,9 @@ class Board{
         this.x = x;
         this.y = y;
         this.size = size;
-        this.sqareSize = size / 9;
+        this.sqareSize = SIZE;
         ctx.lineWidth = 2;
-        this.obj = ctx.strokeRect(this.x, this.y, this.size, this.size);
+        this.obj = ctx.strokeRect(this.x, this.y, SIZE, SIZE);
         this.squares = this.fillBoard();
     }
 
@@ -556,21 +603,20 @@ class Board{
         var y = this.y;
         for (var i = 0; i < 9; i++){
             for (var j = 0; j < 9; j++){
-                matrix[i][j] = new Square(x,y,i,j,this.sqareSize);
-                y = y + this.sqareSize;
+                matrix[i][j] = new Square(x,y,i,j,SIZE);
+                y = y + SIZE;
             }
             y = this.y;
-            x = x + this.sqareSize;
+            x = x + SIZE;
         }
         return matrix;
     }
 
     getSquareByCoord(x,y) {
         var start_point = [this.x,this.y];
-        var tile_size = this.sqareSize;
     
-        x = Math.floor((x - start_point[0])/tile_size);
-        y = Math.floor((y - start_point[1])/tile_size);
+        x = Math.floor((x - start_point[0])/SIZE);
+        y = Math.floor((y - start_point[1])/SIZE);
 
         var col = null;
         var row = null;
@@ -692,7 +738,7 @@ class Square{
         this.column = col;
         this.row = row;
         this.size = size;
-        this.obj = ctx.strokeRect(this.x, this.y, this.size, this.size);
+        this.obj = ctx.strokeRect(this.x, this.y, SIZE, SIZE);
         this.piece = null;
     }
 
@@ -721,9 +767,9 @@ class Square{
         var dir = "img/shogi-set-01/";
         var file = ".gif";
         if (promoted){
-            this.piece = new Piece(player_id,this.x+5, this.y+5,this.column, this.row, dir + type+"P" + file,deg,type, true);
+            this.piece = new Piece(player_id,this.x+((SIZE / 6) * 0.5), this.y+((SIZE / 6) * 0.5),this.column, this.row, dir + type+"P" + file,deg,type, true);
         } else {
-            this.piece = new Piece(player_id,this.x+5, this.y+5,this.column, this.row, dir + type + file,deg,type);
+            this.piece = new Piece(player_id,this.x+((SIZE / 6) * 0.5), this.y+((SIZE / 6) * 0.5),this.column, this.row, dir + type + file,deg,type);
         }
         
     }
@@ -872,10 +918,10 @@ class Piece{
 
     showImage() {    
         ctx.save();
-        ctx.translate(this.x+25, this.y+25);
+        ctx.translate(this.x+((SIZE / 6) * 2.5), this.y+((SIZE / 6) * 2.5));
         ctx.rotate(this.deg * Math.PI / 180);
-        ctx.translate(-(this.x+25), -(this.y+25));
-        ctx.drawImage(this.img,this.x,this.y, 50, 50);
+        ctx.translate(-(this.x+((SIZE / 6) * 2.5)), -(this.y+((SIZE / 6) * 2.5)));
+        ctx.drawImage(this.img,this.x,this.y, ((SIZE / 6) * 5), ((SIZE / 6) * 5));
         ctx.restore();
     }
 
@@ -991,7 +1037,8 @@ function myIncludes(array, element) {
 
 
 if (canvas != null){
-    var board = new Board(180,180,540);
+
+    var board = new Board(((SIZE / 6) * 18),((SIZE / 6) * 18),((SIZE / 6) * 54));
     var PLAYER_ID = null;
     var plates = [];
     
@@ -1012,10 +1059,12 @@ socket.on('playerId', function (id, name, players) {
         PLAYER_ID = id;
         PLAYER_NAME = name;
 
-        plates.push(new Plate(180,180+540,540,180,id,name,true));
+        plates.push(new Plate(((SIZE / 6) * 18),((SIZE / 6) * (18+54)),((SIZE / 6) * 54),((SIZE / 6) * 18),id,name,true));
         var horizontal = true
         var akt = PLAYER_ID + 1;
-        var positions = [[0,180,180,540],[180,0,540,180],[180+540,180,180,540]];
+        var positions = [[0,((SIZE / 6) * 18),((SIZE / 6) * 18),((SIZE / 6) * 54)],
+                         [((SIZE / 6) * 18),0,((SIZE / 6) * 54),((SIZE / 6) * 18)],
+                         [((SIZE / 6) * (18+54)),((SIZE / 6) * 18),((SIZE / 6) * 18),((SIZE / 6) * 54)]];
         for (var i = 0; i < 3; i++){
             
             if (akt > 3) {
